@@ -4,8 +4,12 @@ grammar Javamm;
     package pt.up.fe.comp2023;
 }
 
-INTEGER : [0-9]+ ;
-ID : [a-zA-Z_][a-zA-Z_0-9]* ;
+INT
+    : '0'
+    |[1-9][0-9]*
+    ;
+
+ID : [a-zA-Z_$][a-zA-Z_0-9$]* ;
 
 WS : [ \t\n\r\f]+ -> skip ;
 
@@ -14,7 +18,7 @@ program
     ;
 
 importDeclaration
-    : 'import' ID ( '.' ID )* ';'
+    : 'import' ID( '.' ID )* ';'
     ;
 
 classDeclaration
@@ -34,6 +38,7 @@ type
     : 'int' '[' ']'
     | 'boolean'
     | 'int'
+    | 'String'
     | ID
     ;
 
@@ -45,14 +50,16 @@ statement
     | ID '=' expression ';'
     | ID '[' expression ']' '=' expression ';'
     ;
+
 expression
-    : expression ('&&' | '<' | '+' | '-' | '*' | '/') expression
+    : '!' expression
+    | expression ('*' | '/') expression
+    | expression ('&&' | '>' | '||' | '<' | '+' | '-') expression
     | expression '[' expression ']'
     | expression '.' 'length'
     | expression '.' ID '(' ( expression ( ',' expression )* )? ')'
     | 'new' 'int' '[' expression ']'
     | 'new' ID '(' ')'
-    | '!' expression
     | '(' expression ')'
     | INT
     | 'true'
