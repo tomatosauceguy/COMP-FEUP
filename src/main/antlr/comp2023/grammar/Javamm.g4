@@ -14,56 +14,56 @@ ID : [a-zA-Z_$][a-zA-Z_0-9$]* ;
 WS : [ \t\n\r\f]+ -> skip ;
 
 program
-    : (importDeclaration)* classDeclaration EOF
+    : (importDeclaration)* classDeclaration EOF  #ProgramDec
     ;
 
 importDeclaration
-    : 'import' ID( '.' ID )* ';'
+    : 'import' ID( '.' ID )* ';'  #ImportDec
     ;
 
 classDeclaration
-    : 'class' ID ( 'extends' ID )? '{' ( varDeclaration )* ( methodDeclaration )*'}'
+    : 'class' ID ( 'extends' ID )? '{' ( varDeclaration )* ( methodDeclaration )*'}'  #ClassDec
     ;
 
 varDeclaration
-    : type ID ';'
+    : type ID ';'  #VarDec
     ;
 
 methodDeclaration
-    : ('public')? type ID '(' ( type ID ( ',' type ID )* )? ')' '{' ( varDeclaration )* ( statement )* 'return' expression ';' '}'
-    | ('public')? 'static' 'void' 'main' '(' 'String' '[' ']' ID ')' '{' ( varDeclaration )* ( statement )* '}'
+    : ('public')? type ID '(' ( type ID ( ',' type ID )* )? ')' '{' ( varDeclaration )* ( statement )* 'return' expression ';' '}'  #FunctionDeclaration
+    | ('public')? 'static' 'void' 'main' '(' 'String' '[' ']' ID ')' '{' ( varDeclaration )* ( statement )* '}'  #MainDeclaration
     ;
 
 type
-    : 'int' '[' ']'
-    | 'boolean'
-    | 'int'
-    | 'String'
-    | ID
+    : 'int' '[' ']'  #IntArray
+    | 'boolean'  #Boolean
+    | 'int'  #Int
+    | 'String'  #String
+    | ID  #Class
     ;
 
 statement
-    : '{' ( statement )* '}'
-    | 'if' '(' expression ')' statement 'else' statement
-    | 'while' '(' expression ')' statement
-    | expression ';'
-    | ID '=' expression ';'
-    | ID '[' expression ']' '=' expression ';'
+    : '{' ( statement )* '}'  #BlockStat
+    | 'if' '(' expression ')' statement 'else' statement #IfElseStat
+    | 'while' '(' expression ')' statement  #WhileStat
+    | expression ';'  #ExpressionStat
+    | ID '=' expression ';' #AssignmentStat
+    | ID '[' expression ']' '=' expression ';'  #ArrayAssigmentStat
     ;
 
 expression
-    : '!' expression
-    | expression ('*' | '/') expression
-    | expression ('&&' | '>' | '||' | '<' | '+' | '-') expression
-    | expression '[' expression ']'
-    | expression '.' 'length'
-    | expression '.' ID '(' ( expression ( ',' expression )* )? ')'
-    | 'new' 'int' '[' expression ']'
-    | 'new' ID '(' ')'
-    | '(' expression ')'
-    | INT
-    | 'true'
-    | 'false'
-    | ID
-    | 'this'
+    : '!' expression  #NotExpression
+    | expression ('*' | '/') expression  #MultDivOp
+    | expression ('&&' | '>' | '||' | '<' | '+' | '-') expression  #BinaryOp
+    | expression '[' expression ']' #ArrayAcessOp
+    | expression '.' 'length'  #ArrayLengthOp
+    | expression '.' ID '(' ( expression ( ',' expression )* )? ')'  #MethodCallOp
+    | 'new' 'int' '[' expression ']'  #NewIntArrayOp
+    | 'new' ID '(' ')'  #NewObjectOp
+    | '(' expression ')'  #ParenOp
+    | INT  #IntLiteral
+    | 'true'  #TrueLiteral
+    | 'false'  #FalseLiteral
+    | ID  #IdOp
+    | 'this'  #ThisOp
     ;
