@@ -14,24 +14,24 @@ ID : [a-zA-Z_$][a-zA-Z_0-9$]* ;
 WS : [ \t\n\r\f]+ -> skip ;
 
 program
-    : (importDeclaration)* classDeclaration EOF
+    : (importDeclaration)* classDeclaration EOF  #ProgramDec
     ;
 
 importDeclaration
-    : 'import' ID( '.' ID )* ';'
+    : 'import' ID( '.' ID )* ';'  #ImportDec
     ;
 
 classDeclaration
-    : 'class' ID ( 'extends' ID )? '{' ( varDeclaration )* ( methodDeclaration )*'}'
+    : 'class' ID ( 'extends' ID )? '{' ( varDeclaration )* ( methodDeclaration )*'}'  #ClassDec
     ;
 
 varDeclaration
-    : type ID ';'
+    : type ID ';'  #VarDec
     ;
 
 methodDeclaration
-    : ('public')? type ID '(' ( type ID ( ',' type ID )* )? ')' '{' ( varDeclaration )* ( statement )* 'return' expression ';' '}'
-    | ('public')? 'static' 'void' 'main' '(' 'String' '[' ']' ID ')' '{' ( varDeclaration )* ( statement )* '}'
+    : ('public')? type ID '(' ( type ID ( ',' type ID )* )? ')' '{' ( varDeclaration )* ( statement )* 'return' expression ';' '}'  #FunctionDeclaration
+    | ('public')? 'static' 'void' 'main' '(' 'String' '[' ']' ID ')' '{' ( varDeclaration )* ( statement )* '}'  #MainDeclaration
     ;
 
 type
