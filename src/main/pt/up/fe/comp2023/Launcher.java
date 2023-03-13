@@ -6,12 +6,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 import pt.up.fe.comp.TestUtils;
+import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
+import pt.up.fe.comp2023.analysis.JmmAnalyser;
 import pt.up.fe.specs.util.SpecsIo;
 import pt.up.fe.specs.util.SpecsLogs;
 import pt.up.fe.specs.util.SpecsSystem;
 
-public class Launcher {
+public class    Launcher {
 
     public static void main(String[] args) {
         // Setups console logging and other things
@@ -39,6 +41,11 @@ public class Launcher {
 
         // Check if there are parsing errors
         TestUtils.noErrors(parserResult.getReports());
+
+        JmmAnalyser analyser = new JmmAnalyser();
+        JmmSemanticsResult semanticsResult = analyser.semanticAnalysis(parserResult);
+        if (verifyReports(semanticsResult.getReports())) return;
+        printSymbolTable(semanticsResult);
 
         // ... add remaining stages
     }
