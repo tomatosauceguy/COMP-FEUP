@@ -3,11 +3,13 @@ package pt.up.fe.comp2023;
 import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import pt.up.fe.comp.TestUtils;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
+import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp2023.analysis.JmmAnalyser;
 import pt.up.fe.specs.util.SpecsIo;
 import pt.up.fe.specs.util.SpecsLogs;
@@ -68,4 +70,19 @@ public class    Launcher {
         return config;
     }
 
+    private static boolean verifyReports(List<Report> reports) {
+        if (!reports.isEmpty()) {
+            for (Report report : reports) System.out.println(report);
+            return true;
+        }
+        return false;
+    }
+
+    private static void printSymbolTable(JmmSemanticsResult semanticsResult) {
+        if (Utils.debug) {
+            Utils.printHeader("SYMBOL TABLE");
+            System.out.println(semanticsResult.getSymbolTable().print());
+            Utils.printFooter();
+        }
+    }
 }
