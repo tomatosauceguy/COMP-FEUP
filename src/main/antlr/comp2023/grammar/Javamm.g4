@@ -22,11 +22,11 @@ importDeclaration
     ;
 
 classDeclaration
-    : 'class' ID ( 'extends' ID )? '{' ( varDeclaration )* ( methodDeclaration )*'}'  #ClassDec
+    : 'class' name = ID ( 'extends' ID )? '{' ( varDeclaration )* ( methodDeclaration )*'}'  #ClassDec
     ;
 
 varDeclaration
-    : type ID ';'  #VarDec
+    : type name = ID ';'  #Field
     ;
 
 methodDeclaration
@@ -35,9 +35,9 @@ methodDeclaration
     ;
 
 type
-    : 'int' '[' ']'  #IntArray
-    | 'boolean'  #Boolean
-    | 'int'  #Int
+    : typeName= 'int' '[' ']'  #IntArray
+    | typeName= 'boolean'  #Boolean
+    | typeName='int'  #Int
     | 'String'  #String
     | ID  #Class
     ;

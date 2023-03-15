@@ -5,6 +5,8 @@ import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
 import pt.up.fe.comp.jmm.report.Report;
+import pt.up.fe.comp2023.analysis.analysers.SemanticAnalyserVisitor;
+import pt.up.fe.comp2023.analysis.analysers.SymbolTableVisitor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,13 +34,13 @@ public class JmmAnalyser implements JmmAnalysis {
         JmmNode root = parserResult.getRootNode();
 
         List<SemanticAnalyserVisitor> anlysers = Arrays.asList(
-                new SymbolTableVisitor(),
-                new FieldsInStaticMethods(),
-                new UndefinedVarsVisitor(),
-                new CheckImportsVisitor(),
-                new TypeCheckingVisitor(),
-                new FunctionArgsVisitor(),
-                new ReturnCheckingVisitor()
+                new SymbolTableVisitor()
+                //new FieldsInStaticMethods(),
+               // new UndefinedVarsVisitor(),
+               // new CheckImportsVisitor(),
+              //  new TypeCheckingVisitor(),
+               // new FunctionArgsVisitor(),
+              // new ReturnCheckingVisitor()
         );
 
         for (SemanticAnalyserVisitor analyser : anlysers) {
