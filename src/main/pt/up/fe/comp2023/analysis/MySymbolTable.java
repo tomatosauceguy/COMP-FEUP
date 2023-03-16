@@ -8,6 +8,7 @@ import pt.up.fe.comp.jmm.ast.JmmNode;
 import java.util.*;
 
 public class MySymbolTable implements SymbolTable {
+    private String program;
     private final List<String> imports = new ArrayList<>();
     private String className;
     private String superClassName;
@@ -37,6 +38,10 @@ public class MySymbolTable implements SymbolTable {
 
     public void addImport(String importStatement) {
         imports.add(importStatement);
+    }
+
+    public void setProgram(String program){
+        this.program = program;
     }
 
     public void addField(Symbol field) {
@@ -83,6 +88,8 @@ public class MySymbolTable implements SymbolTable {
         currentMethod = new MySymbolTableMethod(name, returnType);
         methods.add(currentMethod);
     }
+
+
 
     @Override
     public String toString() {

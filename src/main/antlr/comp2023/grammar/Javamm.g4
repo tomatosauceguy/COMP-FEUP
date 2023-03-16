@@ -9,29 +9,29 @@ INT
     |[1-9][0-9]*
     ;
 
-ID : [a-zA-Z_$][a-zA-Z_0-9$]* ;
+ID : [a-zA-Z_$][a-zA-Z_$0-9]* ;
 
 WS : [ \t\n\r\f]+ -> skip ;
 
 program
-    : (importDeclaration)* classDeclaration EOF  #ProgramDec
+    : (importDeclaration)* classDeclaration EOF
     ;
 
 importDeclaration
-    : 'import' ID( '.' ID )* ';'  #ImportDec
+    : 'import' name += ID( '.' name += ID )* ';'
     ;
 
 classDeclaration
-    : 'class' ID ( 'extends' ID )? '{' ( varDeclaration )* ( methodDeclaration )*'}'  #ClassDec
+    : 'class' name = ID ( 'extends' sName = ID )? '{' ( varDeclaration )* ( methodDeclaration )*'}'
     ;
 
 varDeclaration
-    : type ';'  #VarDec
+    : type ';'
     ;
 
 methodDeclaration
-    : ('public')? type'(' ( type ( ',' type )* )? ')' '{' ( varDeclaration )* ( statement )* 'return' expression ';' '}'  #FunctionDeclaration
-    | ('public')? 'static' 'void' 'main' '(' 'String' '[' ']' ID ')' '{' ( varDeclaration )* ( statement )* '}'  #MainDeclaration
+    : ('public')? type'(' ( type ( ',' type )* )? ')' '{' ( varDeclaration )* ( statement )* 'return' expression ';' '}'  #MethodName
+    | ('public')? 'static' 'void' 'main' '(' 'String' '[' ']' ID ')' '{' ( varDeclaration )* ( statement )* '}'  #MethodName
     ;
 
 type locals [boolean isArray = false]
