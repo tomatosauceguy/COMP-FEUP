@@ -43,9 +43,11 @@ public class    Launcher {
         TestUtils.noErrors(parserResult.getReports());
 
         JmmAnalyser analyser = new JmmAnalyser();
-        JmmSemanticsResult semanticsResult = analyser.semanticAnalysis(parserResult);
+        JmmSemanticsResult jmmAnalysis = new JmmAnalyser().semanticAnalysis(parserResult);
+        /*
         if (verifyReports(semanticsResult.getReports())) return;
         printSymbolTable(semanticsResult);
+        */
 
         // ... add remaining stages
     }

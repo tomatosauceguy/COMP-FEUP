@@ -26,20 +26,20 @@ classDeclaration
     ;
 
 varDeclaration
-    : type ID ';'  #VarDec
+    : type ';'  #VarDec
     ;
 
 methodDeclaration
-    : ('public')? type ID '(' ( type ID ( ',' type ID )* )? ')' '{' ( varDeclaration )* ( statement )* 'return' expression ';' '}'  #FunctionDeclaration
+    : ('public')? type'(' ( type ( ',' type )* )? ')' '{' ( varDeclaration )* ( statement )* 'return' expression ';' '}'  #FunctionDeclaration
     | ('public')? 'static' 'void' 'main' '(' 'String' '[' ']' ID ')' '{' ( varDeclaration )* ( statement )* '}'  #MainDeclaration
     ;
 
-type
-    : 'int' '[' ']'  #IntArray
-    | 'boolean'  #Boolean
-    | 'int'  #Int
-    | 'String'  #String
-    | ID  #Class
+type locals [boolean isArray = false]
+    : name='int' ('['']'{$isArray = true;})? varname=ID
+    | name='boolean' varname=ID
+    | name='int' varname=ID
+    | name='String' varname=ID
+    | name=ID varname=ID
     ;
 
 statement
@@ -52,15 +52,16 @@ statement
     ;
 
 expression
-    : '!' expression  #NotExpression
+    : '(' expression ')'  #ParenOp
+    | '!' expression  #NotExpression
+    | expression ('&&' | '>' | '||' | '<') expression  #BinaryOp
     | expression ('*' | '/') expression  #MultDivOp
-    | expression ('&&' | '>' | '||' | '<' | '+' | '-') expression  #BinaryOp
+    | expression ('+' | '-') expression  #BinaryOp
     | expression '[' expression ']' #ArrayAcessOp
     | expression '.' 'length'  #ArrayLengthOp
     | expression '.' ID '(' ( expression ( ',' expression )* )? ')'  #MethodCallOp
     | 'new' 'int' '[' expression ']'  #NewIntArrayOp
     | 'new' ID '(' ')'  #NewObjectOp
-    | '(' expression ')'  #ParenOp
     | INT  #IntLiteral
     | 'true'  #TrueLiteral
     | 'false'  #FalseLiteral
