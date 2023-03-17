@@ -88,6 +88,13 @@ public class Visitor extends AJmmVisitor<String, String> {
             params = (List<String>) node.getObject("varname");
             JmmNode childType = node.getJmmChild(0);
             String returnTypeName = childType.get("name");
+            Boolean returnIsArray = (Boolean) childType.getObject("isArray");
+            Type type = new Type(returnTypeName, returnIsArray);
+
+            table.addMethod(methodName, methodType);
+            for(int i = 1 ; i < children.size(); i++){
+
+            }
         }
 
         scope = "MAIN";
