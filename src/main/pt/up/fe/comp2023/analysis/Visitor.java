@@ -52,7 +52,6 @@ public class Visitor extends AJmmVisitor<String, String> {
 
         }
 
-        scope = "CLASS";
         return s + "CLASS";
     }
 
@@ -93,13 +92,16 @@ public class Visitor extends AJmmVisitor<String, String> {
 
             table.addMethod(methodName, methodType);
             for(int i = 1 ; i < children.size(); i++){
+                if(children.get(i).getKind().equals("varDeclaration") ){
 
+                }
             }
         }
+        //methodParams. (methodName, methodParams);
 
         scope = "MAIN";
 
-        table.addMethod("main", new Type("void", false));
+        //table.addMethod("main", new Type("void", false));
 
         node.put("params", "");
 

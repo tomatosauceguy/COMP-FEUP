@@ -53,13 +53,14 @@ statement
 
 expression
     : '(' expression ')'  #ParenOp
-    | '!' expression  #NotExpression
-    | expression ('&&' | '>' | '||' | '<') expression  #BinaryOp
-    | expression ('*' | '/') expression  #MultDivOp
-    | expression ('+' | '-') expression  #BinaryOp
     | expression '[' expression ']' #ArrayAcessOp
     | expression '.' 'length'  #ArrayLengthOp
     | expression '.' ID '(' ( expression ( ',' expression )* )? ')'  #MethodCallOp
+    | '!' expression  #NotExpression
+    | expression ('*' | '/') expression  #MultDivOp
+    | expression ('+' | '-') expression  #BinaryOp
+    | expression '<' expression  #BinaryOp
+    | expression '&&' expression #BinaryOp
     | 'new' 'int' '[' expression ']'  #NewIntArrayOp
     | 'new' ID '(' ')'  #NewObjectOp
     | INT  #IntLiteral
