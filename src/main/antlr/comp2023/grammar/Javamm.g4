@@ -13,6 +13,10 @@ ID : [a-zA-Z_$][a-zA-Z_$0-9]* ;
 
 WS : [ \t\n\r\f]+ -> skip ;
 
+COMMENT : '/*' .*? '*/' -> skip ;
+
+LINE_COMMENT : '//' ~[\r\n]* -> skip ;
+
 program
     : (importDeclaration)* classDeclaration EOF
     ;
