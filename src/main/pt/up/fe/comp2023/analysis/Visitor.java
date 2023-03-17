@@ -29,13 +29,12 @@ public class Visitor extends AJmmVisitor<String, String> {
     }
 
     private String dealWithProgram(JmmNode node, String s){
-        s = (s!=null?s:"");
-        String ret = "";
+        StringBuilder ret = new StringBuilder();
         for ( JmmNode child : node.getChildren ()){
-            ret += visit(child ,"");
-            ret += "\n";
+            ret.append(visit(child, ""));
+            ret.append("\n");
         }
-        return ret;
+        return ret.toString();
     }
 
     private String dealWithImport(JmmNode node, String s) {
@@ -61,8 +60,7 @@ public class Visitor extends AJmmVisitor<String, String> {
         String typeName = node.get("name");
         var typename=node.get("name");
         var isArray=(Boolean) node.getObject("isArray");
-        Type type=new Type(typename,isArray);
-        return  type;
+        return new Type(typename,isArray);
     }
 
     private String dealWithFunction(JmmNode node, String space) {
@@ -83,9 +81,13 @@ public class Visitor extends AJmmVisitor<String, String> {
 
             for(JmmNode child : children){
                 if(child.getKind().equals("varDeclaration")){
-
+                   // table.addLocalVariable(); TODO: chamar o addLocalVariable do MySmbolTableMethod somehow :<
                 }
             }
+        }else{
+            params = (List<String>) node.getObject("varname");
+            JmmNode childType = node.getJmmChild(0);
+            String returnTypeName = childType.get("name");
         }
 
         scope = "MAIN";
