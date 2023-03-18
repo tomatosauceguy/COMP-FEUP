@@ -78,7 +78,7 @@ public class Visitor extends AJmmVisitor<String, String> {
             Type returnType = new Type("void", false);
             table.addMethod(methodName, methodType);
 
-            MySymbolTableMethod method = table.addMetho(methodName, methodType);
+            MySymbolTableMethod method = table.addMethod(methodName, methodType);
             for(JmmNode child : children){
                 if(child.getKind().equals("varDeclaration")){
                    Symbol someSymbol = new Symbol();

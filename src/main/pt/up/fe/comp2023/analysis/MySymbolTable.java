@@ -68,12 +68,6 @@ public class MySymbolTable implements SymbolTable {
         throw new NoSuchMethodException(name);
     }
 
-    public MySymbolTableMethod addMetho(String name, Type returnType) {
-        MySymbolTableMethod method = new MySymbolTableMethod(name, returnType);
-        methods.add(method);
-        return method;
-    }
-
     public Map.Entry<Symbol, Boolean> getField(String name) {
         for (Map.Entry<Symbol, Boolean> field : this.fields.entrySet()) {
             if (field.getKey().getName().equals(name))
@@ -90,9 +84,10 @@ public class MySymbolTable implements SymbolTable {
         return false;
     }
 
-    public void addMethod(String name, Type returnType) {
+    public MySymbolTableMethod addMethod(String name, Type returnType) {
         currentMethod = new MySymbolTableMethod(name, returnType);
         methods.add(currentMethod);
+        return currentMethod;
     }
 
 
