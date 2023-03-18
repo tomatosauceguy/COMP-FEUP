@@ -12,8 +12,8 @@ public class MySymbolTable implements SymbolTable {
     private final List<String> imports = new ArrayList<>();
     private String className;
     private String superClassName;
-    private final Map<Symbol, Boolean> fields = new HashMap<>();
-    private final List<MySymbolTableMethod> methods = new ArrayList<>();
+    private List<Symbol> fields =new ArrayList<>();
+    private List<MySymbolTableMethod> methods = new ArrayList<>();
     private MySymbolTableMethod currentMethod;
 
     public static Type getType(JmmNode node, String attribute) {
@@ -40,21 +40,10 @@ public class MySymbolTable implements SymbolTable {
         imports.add(importStatement);
     }
 
-    public void setProgram(String program){
-        this.program = program;
-    }
-
     public void addField(Symbol field) {
-        fields.put(field, false);
+        this.fields.add(field);
     }
 
-    public boolean fieldExists(String name) {
-        for (Symbol field : this.fields.keySet()) {
-            if (field.getName().equals(name))
-                return true;
-        }
-        return false;
-    }
 
     public MySymbolTableMethod getMethod(String name, List<Type> params, Type returnType) throws NoSuchMethodException {
         for (MySymbolTableMethod method : methods) {
@@ -68,22 +57,6 @@ public class MySymbolTable implements SymbolTable {
         throw new NoSuchMethodException(name);
     }
 
-    public Map.Entry<Symbol, Boolean> getField(String name) {
-        for (Map.Entry<Symbol, Boolean> field : this.fields.entrySet()) {
-            if (field.getKey().getName().equals(name))
-                return field;
-        }
-        return null;
-    }
-
-    public boolean initializeField(Symbol symbol) {
-        if (this.fields.containsKey(symbol)) {
-            this.fields.put(symbol, true);
-            return true;
-        }
-        return false;
-    }
-
     public MySymbolTableMethod addMethod(String name, Type returnType) {
         currentMethod = new MySymbolTableMethod(name, returnType);
         methods.add(currentMethod);
@@ -92,7 +65,7 @@ public class MySymbolTable implements SymbolTable {
 
 
 
-    @Override
+    @Override // pode nao ser necessario?
     public String toString() {
         StringBuilder builder = new StringBuilder("SYMBOL TABLE\n");
         builder.append("Imports").append("\n");
@@ -102,8 +75,8 @@ public class MySymbolTable implements SymbolTable {
         builder.append("Class Name: ").append(className).append(" | Extends: ").append(superClassName).append("\n");
 
         builder.append("--- Local Variables ---").append("\n");
-        for (Map.Entry<Symbol, Boolean> field : fields.entrySet())
-            builder.append("\t").append(field.getKey()).append(" Initialized: ").append(field.getValue()).append("\n");
+        for (var field : fields)
+            builder.append("\t").append(field).append(" Initialized: ").append(field).append("\n");
 
         builder.append("--- Methods ---").append("\n");
         for (MySymbolTableMethod method : this.methods) {
@@ -129,11 +102,13 @@ public class MySymbolTable implements SymbolTable {
 
     @Override
     public List<Symbol> getFields() {
-        return new ArrayList<>(this.fields.keySet());
+        return this.fields;
     }
 
     @Override
     public List<String> getMethods() {
+        System.out.println("In get methods");
+        System.out.println(this.methods);
         List<String> methods = new ArrayList<>();
         for (MySymbolTableMethod method : this.methods) {
             methods.add(method.getName());

@@ -49,28 +49,6 @@ public class MySymbolTableMethod {
         this.parameters.add(Map.entry(param, "param"));
     }
 
-    public boolean fieldExists(String field) {
-        for (Symbol localVariable : this.localVariables.keySet()) {
-            if (localVariable.getName().equals(field))
-                return true;
-        }
-        return false;
-    }
-
-    public Map.Entry<Symbol, Boolean> getField(String name) {
-        for (Map.Entry<Symbol, Boolean> field : this.localVariables.entrySet()) {
-            if (field.getKey().getName().equals(name))
-                return field;
-        }
-
-        for (Map.Entry<Symbol, String> param : this.parameters) {
-            if (param.getKey().getName().equals(name))
-                return Map.entry(param.getKey(), true);
-        }
-
-        return null;
-    }
-
     public boolean initializeField(Symbol symbol) {
         if (this.localVariables.containsKey(symbol)) {
             this.localVariables.put(symbol, true);
@@ -117,31 +95,7 @@ public class MySymbolTableMethod {
         }
         return true;
     }
-
-    public static List<Type> parseParameters(String params) {
-        if (params.equals("")) return new ArrayList<>();
-
-        String[] typesString = params.split(",");
-
-        List<Type> types = new ArrayList<>();
-
-        for (String s : typesString) {
-            String[] aux = s.split(" ");
-            types.add(new Type(aux[0], aux.length == 2));
-        }
-
-        return types;
-    }
-
-    public String isParameter(Symbol symbol) {
-        for (int i = 1; i < this.parameters.size() + 1; i++) {
-            if (parameters.get(i - 1).getKey() == symbol) {
-                return "$" + i;
-            }
-        }
-        return null;
-    }
-
+    // os dois de baixo podem nao ser necessarios?
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -34,8 +34,8 @@ varDeclaration
     ;
 
 methodDeclaration
-    : ('public')? type'(' ( type ( ',' type )* )? ')' '{' ( varDeclaration )* ( statement )* 'return' expression ';' '}'  #MethodName
-    | ('public')? 'static' 'void' 'main' '(' 'String' '[' ']' ID ')' '{' ( varDeclaration )* ( statement )* '}'  #MethodName
+    : ('public')? type '(' ( type ( ',' type )* )? ')' '{' ( varDeclaration )* ( statement )* 'return' expression ';' '}'  #RegularMethod
+    | ('public')? 'static' 'void' 'main' '(' 'String' '[' ']' ID ')' '{' ( varDeclaration )* ( statement )* '}'  #MainMethod
     ;
 
 type locals [boolean isArray = false]

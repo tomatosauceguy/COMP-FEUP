@@ -6,13 +6,11 @@ import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.report.Report;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class Visitor extends AJmmVisitor<String, String> {
     private final MySymbolTable table;
 
-    private String scope;
     private final List<Report> reports;
 
     public Visitor(MySymbolTable table, List<Report> reports) {
@@ -25,7 +23,8 @@ public class Visitor extends AJmmVisitor<String, String> {
         addVisit("Program", this::dealWithProgram);
         addVisit("ImportDeclaration", this::dealWithImport);
         addVisit("ClassDeclaration", this::dealWithClass);
-        addVisit("MethodDeclaration", this::dealWithFunction);
+        addVisit("MainMethod", this::dealWithMain);
+        addVisit("RegularMethod", this::dealWithRegularMethod);
     }
 
     private String dealWithProgram(JmmNode node, String s){
@@ -37,6 +36,14 @@ public class Visitor extends AJmmVisitor<String, String> {
         return ret.toString();
     }
 
+    private Symbol dealWithType(JmmNode node){
+        String typeName = node.get("name");
+        var isArray=(Boolean) node.getObject("isArray");
+        Type type = new Type(typeName, isArray);
+        var varName = node.get("varname");
+        return new Symbol(type,varName);
+    }
+
     private String dealWithImport(JmmNode node, String s) {
         String ret=s+"import"+node.get("ID");
         table.addImport(node.get("name"));
@@ -44,76 +51,61 @@ public class Visitor extends AJmmVisitor<String, String> {
     }
 
     private String dealWithClass(JmmNode node, String s) {
-
         table.setClassName(node.get("name"));
         try {
             table.setSuperClassName(node.get("sName"));
         } catch (NullPointerException ignored) {
 
         }
+        for(JmmNode child : node.getChildren()){
+            if(child.getKind().equals("VarDeclaration") ) {
+                Symbol field = dealWithType(child.getJmmChild(0));
+                table.addField(field);
+            }else{
+                visit(child, "");
+            }
+        }
 
         return s + "CLASS";
     }
 
-    private Type dealWithType(JmmNode node){
-        String typeName = node.get("name");
-        var typename=node.get("name");
-        var isArray=(Boolean) node.getObject("isArray");
-        return new Type(typename,isArray);
-    }
+    private String dealWithMain(JmmNode node,String space){
 
-    private String dealWithFunction(JmmNode node, String space) {
-        String methodName = node.getJmmChild(0).get("varname");
-        Type methodType = dealWithType(node);
+        String methodName="main";
+        Type returnType = new Type("void", false);
+        table.addMethod(methodName, returnType);
 
-        List<Symbol> methodParams = new ArrayList<>();
-        List<String> params;
-        List<Symbol> localVars = new ArrayList<>();
-        List<JmmNode> children = node.getChildren();
+        Type paramType = new Type("String", true);
+        String paramName = "args";
+        Symbol paramSymbol = new Symbol(paramType, paramName);
 
-        if(methodName.equals("main")){
-            Type paramType = new Type("String", true);
-            String paramName = node.get("args");
-            Symbol paramSymbol = new Symbol(paramType, paramName);
-            Type returnType = new Type("void", false);
-            table.addMethod(methodName, methodType);
 
-            MySymbolTableMethod method = table.addMethod(methodName, methodType);
-            for(JmmNode child : children){
-                if(child.getKind().equals("varDeclaration")){
-                   Symbol someSymbol = new Symbol();
-                   method.addLocalVariable(someSymbol);
-                }
-            }
-        }else{
-            params = (List<String>) node.getObject("varname");
-            JmmNode childType = node.getJmmChild(0);
-            String returnTypeName = childType.get("name");
-            Boolean returnIsArray = (Boolean) childType.getObject("isArray");
-            Type type = new Type(returnTypeName, returnIsArray);
-
-            table.addMethod(methodName, methodType);
-            for(int i = 1 ; i < children.size(); i++){
-                if(children.get(i).getKind().equals("varDeclaration") ){
-
-                }
+        MySymbolTableMethod method = table.getCurrentMethod();
+        method.addParameter(paramSymbol);
+        for(JmmNode child : node.getChildren()){
+            if(child.getKind().equals("VarDeclaration")){
+                Symbol paramVar = dealWithType(child.getJmmChild(0));
+                method.addLocalVariable(paramVar);
             }
         }
-        //methodParams. (methodName, methodParams);
+        return "";
+    }
+    private String dealWithRegularMethod(JmmNode node, String space) {
 
-        scope = "MAIN";
+        List<JmmNode> children = node.getChildren();
+        Symbol methodType = dealWithType(node.getJmmChild(0));
 
-        //table.addMethod("main", new Type("void", false));
+        MySymbolTableMethod method = table.addMethod(methodType.getName(), methodType.getType());
 
-        node.put("params", "");
-
-
-
-        scope = "METHOD";
-        table.addMethod(node.get("name"), MySymbolTable.getType(node, "return"));
-
-        node.put("params", "");
-
-        return node.toString();
+        for(int i = 1 ; i < children.size(); i++){
+            if(children.get(i).getKind().equals("VarDeclaration") ){
+                Symbol paramVar = dealWithType(children.get(i).getJmmChild(0));
+                method.addLocalVariable(paramVar);
+            }else if(children.get(i).getKind().equals("Type")){
+                Symbol param = dealWithType(children.get(i));
+                method.addParameter(param);
+            }
+        }
+        return null;
     }
 }
