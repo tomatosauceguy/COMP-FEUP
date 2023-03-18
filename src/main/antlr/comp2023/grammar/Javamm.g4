@@ -5,7 +5,7 @@ grammar Javamm;
 }
 
 INT
-    : '0'
+    : [0]
     |[1-9][0-9]*
     ;
 
@@ -67,9 +67,9 @@ expression
     | expression '&&' expression #BinaryOp
     | 'new' 'int' '[' expression ']'  #NewIntArrayOp
     | 'new' ID '(' ')'  #NewObjectOp
-    | INT  #IntLiteral
-    | 'true'  #TrueLiteral
-    | 'false'  #FalseLiteral
-    | ID  #IdOp
-    | 'this'  #ThisOp
+    | val=INT  #IntLiteral
+    | val='true'  #TrueLiteral
+    | val='false'  #FalseLiteral
+    | val=ID  #IdOp
+    | val='this'  #ThisOp
     ;
