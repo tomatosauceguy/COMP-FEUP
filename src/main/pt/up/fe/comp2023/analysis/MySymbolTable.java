@@ -16,18 +16,6 @@ public class MySymbolTable implements SymbolTable {
     private List<MySymbolTableMethod> methods = new ArrayList<>();
     private MySymbolTableMethod currentMethod;
 
-    public static Type getType(JmmNode node, String attribute) {
-        Type type;
-        if (node.get(attribute).equals("int[]"))
-            type = new Type("int", true);
-        else if (node.get(attribute).equals("int"))
-            type = new Type("int", false);
-        else
-            type = new Type(node.get(attribute), false);
-
-        return type;
-    }
-
     public void setClassName(String className) {
         this.className = className;
     }
@@ -44,28 +32,13 @@ public class MySymbolTable implements SymbolTable {
         this.fields.add(field);
     }
 
-
-    public MySymbolTableMethod getMethod(String name, List<Type> params, Type returnType) throws NoSuchMethodException {
-        for (MySymbolTableMethod method : methods) {
-            if (method.getName().equals(name) && returnType.equals(method.getReturnType()) && params.size() == method.getParameters().size()) {
-                if (MySymbolTableMethod.matchParameters(params, method.getParameterTypes())) {
-                    return method;
-                }
-            }
-        }
-
-        throw new NoSuchMethodException(name);
-    }
-
     public MySymbolTableMethod addMethod(String name, Type returnType) {
         currentMethod = new MySymbolTableMethod(name, returnType);
         methods.add(currentMethod);
         return currentMethod;
     }
 
-
-
-    @Override // pode nao ser necessario?
+    @Override
     public String toString() {
         StringBuilder builder = new StringBuilder("SYMBOL TABLE\n");
         builder.append("Imports").append("\n");

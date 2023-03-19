@@ -16,15 +16,6 @@ public class MySymbolTableMethod {
         this.returnType = returnType;
     }
 
-    public List<Type> getParameterTypes() {
-        List<Type> params = new ArrayList<>();
-
-        for (Map.Entry<Symbol, String> parameter : parameters) {
-            params.add(parameter.getKey().getType());
-        }
-        return params;
-    }
-
     public void addLocalVariable(Symbol variable) {
         localVariables.put(variable, false);
     }
@@ -41,32 +32,15 @@ public class MySymbolTableMethod {
         return returnType;
     }
 
-    public void setReturnType(Type returnType) {
-        this.returnType = returnType;
-    }
-
     public void addParameter(Symbol param) {
         this.parameters.add(Map.entry(param, "param"));
     }
-
-    public boolean initializeField(Symbol symbol) {
-        if (this.localVariables.containsKey(symbol)) {
-            this.localVariables.put(symbol, true);
-            return true;
-        }
-        return false;
-    }
-
     public List<Symbol> getParameters() {
         List<Symbol> params = new ArrayList<>();
         for (Map.Entry<Symbol, String> param : this.parameters) {
             params.add(param.getKey());
         }
         return params;
-    }
-
-    public List<Symbol> getLocalVariables() {
-        return new ArrayList<>(this.localVariables.keySet());
     }
 
     @Override
@@ -87,15 +61,6 @@ public class MySymbolTableMethod {
         return builder.toString();
     }
 
-    public static boolean matchParameters(List<Type> types1, List<Type> types2) {
-        for (int i = 0; i < types1.size(); i++) {
-            if (!types1.get(i).equals(types2.get(i))) {
-                return false;
-            }
-        }
-        return true;
-    }
-    // os dois de baixo podem nao ser necessarios?
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
