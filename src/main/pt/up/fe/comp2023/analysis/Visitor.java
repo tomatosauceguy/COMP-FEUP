@@ -45,9 +45,12 @@ public class Visitor extends AJmmVisitor<String, String> {
     }
 
     private String dealWithImport(JmmNode node, String s) {
-        String ret=s+"import"+node.get("ID");
-        table.addImport(node.get("name"));
-        return ret + "IMPORT";
+        List<String> vars = (List<String>) node.getObject("name");
+        String firstName = vars.get(0);
+        for(int i=1;i<vars.size();i++)
+            firstName+="." + vars.get(i);
+        table.addImport(firstName);
+        return "IMPORT";
     }
 
     private String dealWithClass(JmmNode node, String s) {
