@@ -30,7 +30,6 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
 
     protected void buildVisitor() {
 
-
         addVisit("BinaryOperator", this::dealWithBinaryOperation);
         addVisit("RelationalExpression", this::dealWithRelationalExpression);
         addVisit("AndExpression", this::dealWithAndExpression);
