@@ -295,7 +295,7 @@ public class JasminGenerator {
             default:
                 return "Error in dealWithIntOperation\n";
         }
-        return leftOp + operator + rightOp;
+        return leftOp + rightOp + operator;
     }
 
     private String dealWithBooleanOperation(BinaryOpInstruction instruction, HashMap<String, Descriptor> table){
