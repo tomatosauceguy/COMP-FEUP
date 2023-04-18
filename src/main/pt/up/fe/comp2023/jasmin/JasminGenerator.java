@@ -1,4 +1,4 @@
-package pt.up.fe.comp2023.analysis;
+package pt.up.fe.comp2023.jasmin;
 
 import org.specs.comp.ollir.*;
 
@@ -47,7 +47,7 @@ public class JasminGenerator {
             if (classUnit.getSuperClass() != null)
                 classSuper = classUnit.getSuperClass();
 
-            return "\n.method public <init>()V\naload_0\ninvokespecial " + classSuper +  ".<init>()V\nreturn\n.end method\n";
+            return "\n.method public <init>()V\naload_0\ninvokespecial " + classSuper +  "/<init>()V\nreturn\n.end method\n";
         }
 
         StringBuilder string = new StringBuilder("\n.method").append(" ").append(method.getMethodAccessModifier().name().toLowerCase()).append(" ");
@@ -182,7 +182,7 @@ public class JasminGenerator {
             params += this.convertType(element.getType());
         }
 
-        string += call.name() + " " + this.getOjectClassName(classN) + " " + literal.replace("\"","") + "(" + params + ")" + this.convertType(instruction.getReturnType()) + "\n";
+        string += call.name() + " " + this.getOjectClassName(classN) + "/" + literal.replace("\"","") + "(" + params + ")" + this.convertType(instruction.getReturnType()) + "\n";
 
         if (literal.equals("\"<init>\"") && !classN.equals("this")) {
             string += this.storeElement((Operand) instruction.getFirstArg(), table);
