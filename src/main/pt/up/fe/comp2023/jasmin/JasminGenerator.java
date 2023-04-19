@@ -74,9 +74,12 @@ public class JasminGenerator {
     // going to be modified later because of values
     private String dealWithMethodLimits(Method method){
         StringBuilder string = new StringBuilder();
-
-        string.append(".limit locals ").append(99).append("\n");
-        string.append(".limit stack ").append(99).append("\n");
+        int localCount = method.getVarTable().size();
+        if (!method.isStaticMethod()) {
+            localCount++;
+        }
+        string.append(".limit locals ").append(localCount).append("\n");
+        string.append(".limit stack ").append(counterMax).append("\n");
 
         return string.toString();
     }
