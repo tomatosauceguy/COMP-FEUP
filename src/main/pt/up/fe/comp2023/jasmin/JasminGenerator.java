@@ -7,6 +7,8 @@ import java.util.Map;
 
 public class JasminGenerator {
     private ClassUnit classUnit;
+    private int counterStack;
+    private int counterMax;
     private int conditional;
 
 
@@ -29,8 +31,11 @@ public class JasminGenerator {
         }
 
         for (Method method : classUnit.getMethods()) {
+            this.counterMax = 0;
+            this.counterStack = 0;
+
             string.append(this.dealWithMethodHeader(method));
-            String instructions = this.dealtWithMethodIntructions(method);
+            String instructions = this.dealWithMethodIntructions(method);
             if (!method.isConstructMethod()) {
                 string.append(this.dealWithMethodLimits(method));
                 string.append(instructions);
@@ -47,7 +52,7 @@ public class JasminGenerator {
             if (classUnit.getSuperClass() != null)
                 classSuper = classUnit.getSuperClass();
 
-            return "\n.method public <init>()V\naload_0\ninvokespecial " + classSuper +  "/<init>()V\nreturn\n.end method\n";
+            return "\n.method public <init>()V\naload_0\ninvokespecial " + classSuper +  ".<init>()V\nreturn\n.end method\n";
         }
 
         StringBuilder string = new StringBuilder("\n.method").append(" ").append(method.getMethodAccessModifier().name().toLowerCase()).append(" ");
@@ -69,15 +74,18 @@ public class JasminGenerator {
     // going to be modified later because of values
     private String dealWithMethodLimits(Method method){
         StringBuilder string = new StringBuilder();
-
-        string.append(".limit locals ").append(99).append("\n");
-        string.append(".limit stack ").append(99).append("\n");
+        int localCount = method.getVarTable().size();
+        if (!method.isStaticMethod()) {
+            localCount++;
+        }
+        string.append(".limit locals ").append(localCount).append("\n");
+        string.append(".limit stack ").append(counterMax).append("\n");
 
         return string.toString();
     }
 
 
-    private String dealtWithMethodIntructions(Method method){
+    private String dealWithMethodIntructions(Method method){
         StringBuilder string = new StringBuilder();
         method.getVarTable();
         for (Instruction instruction : method.getInstructions()) {
