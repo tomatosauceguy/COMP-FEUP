@@ -92,6 +92,7 @@ public class JasminGenerator {
             string.append(dealWithInstruction(instruction, method.getVarTable(), method.getLabels()));
             if (instruction instanceof CallInstruction && ((CallInstruction) instruction).getReturnType().getTypeOfElement() != ElementType.VOID) {
                 string.append("pop\n");
+                this.decrementStackCounter(1);
             }
         }
 
@@ -136,9 +137,11 @@ public class JasminGenerator {
         String string = "";
         Operand op = (Operand) instruction.getDest();
 
-        if(op instanceof ArrayOperand arrayop){
+        if(op instanceof ArrayOperand){
+            ArrayOperand arrayop = (ArrayOperand) op;
             //Loading array
-            string += String.format("aload%s\n", this.getVirtualReg(op.getName(), table));
+            string += String.format("aload%s\n", this.getVirtualReg(arrayop.getName(), table));
+            this.incrementStackCounter(1);
             //Loading index
             string += loadElement(arrayop.getIndexOperands().get(0), table);
         }
@@ -156,12 +159,14 @@ public class JasminGenerator {
         CallType call = instruction.getInvocationType();
 
         switch (call){
-            case invokevirtual, invokespecial:
+            case invokespecial:
                 string += this.dealWithInvoke(instruction, table, call, ((ClassType)instruction.getFirstArg().getType()).getName());
                 break;
             case invokestatic:
                 string += this.dealWithInvoke(instruction, table, call, ((Operand)instruction.getFirstArg()).getName());
                 break;
+            case invokevirtual:
+                string += this.dealWithInvoke(instruction, table, call, ((ClassType) instruction.getFirstArg().getType()).getName());
             case NEW:
                 string += this.dealWithNewObject(instruction, table);
                 break;
@@ -185,12 +190,23 @@ public class JasminGenerator {
             string += this.loadElement(instruction.getFirstArg(), table);
         }
 
+        int nParams = 0;
         for(Element element : instruction.getListOfOperands()){
             string += this.loadElement(element, table);
             params += this.convertType(element.getType());
+            nParams++;
         }
 
-        string += call.name() + " " + this.getOjectClassName(classN) + "/" + literal.replace("\"","") + "(" + params + ")" + this.convertType(instruction.getReturnType()) + "\n";
+        if (!instruction.getInvocationType().equals(CallType.invokestatic)) {
+            nParams += 1;
+        }
+        this.decrementStackCounter(nParams);
+
+        if (instruction.getReturnType().getTypeOfElement() != ElementType.VOID) {
+            this.incrementStackCounter(1);
+        }
+
+        string += call.name() + " " + this.getOjectClassName(classN) + "." + literal.replace("\"","") + "(" + params + ")" + this.convertType(instruction.getReturnType()) + "\n";
 
         if (literal.equals("\"<init>\"") && !classN.equals("this")) {
             string += this.storeElement((Operand) instruction.getFirstArg(), table);
@@ -208,8 +224,10 @@ public class JasminGenerator {
             string += "newarray int\n";
         }
 
-        if(elem.getType().getTypeOfElement().equals(ElementType.OBJECTREF))
+        if(elem.getType().getTypeOfElement().equals(ElementType.OBJECTREF)) {
+            this.incrementStackCounter(2);
             string += "new " + this.getOjectClassName(((Operand) elem).getName()) + "\ndup\n";
+        }
 
         return string;
     }
@@ -229,11 +247,13 @@ public class JasminGenerator {
             case INT32:
             case BOOLEAN:
                 string = loadElement(instruction.getOperand(), table);
+                this.decrementStackCounter(1);
                 string += "ireturn";
                 break;
             case ARRAYREF:
             case OBJECTREF:
                 string = loadElement(instruction.getOperand(), table);
+                this.decrementStackCounter(1);
                 string += "areturn";
                 break;
             default:
@@ -251,6 +271,8 @@ public class JasminGenerator {
 
         string += this.loadElement(object, table);
         string += this.loadElement(value, table);
+
+        this.decrementStackCounter(2);
 
         return string + "putfield " + classUnit.getClassName() + "/" + variable.getName() + " " + convertType(variable.getType()) + "\n";
     }
@@ -303,59 +325,63 @@ public class JasminGenerator {
             default:
                 return "Error in dealWithIntOperation\n";
         }
+        this.decrementStackCounter(1);
         return leftOp + rightOp + operator;
     }
 
-    private String dealWithBooleanOperation(BinaryOpInstruction instruction, HashMap<String, Descriptor> table){
+    private String dealWithBooleanOperation(BinaryOpInstruction instruction, HashMap<String, Descriptor> varTable) {
         OperationType opt = instruction.getOperation().getOpType();
         StringBuilder string = new StringBuilder();
-
-        switch (instruction.getOperation().getOpType()){
-            case LTH:
-            case GTE: {
-                String leftOp = loadElement(instruction.getLeftOperand(), table);
-                String rightOp = loadElement(instruction.getRightOperand(), table);
-
-                string.append(leftOp)
-                      .append(rightOp)
-                      .append(this.dealWithRelationalOperation(opt, this.getTrueLabel()))
-                      .append("iconst_1\n")
-                      .append("goto ").append(this.getEndIfLabel()).append("\n")
-                      .append(this.getTrueLabel()).append(":\n")
-                      .append("iconst_0\n")
-                      .append(this.getEndIfLabel()).append(":\n");
-                break;
+        switch (instruction.getOperation().getOpType()) {
+            case LTH, GTE -> {
+                // ..., value1, value2 →
+                // ...
+                String leftOperand = loadElement(instruction.getLeftOperand(), varTable);
+                String rightOperand = loadElement(instruction.getRightOperand(), varTable);
+                string.append(leftOperand)
+                        .append(rightOperand)
+                        .append(this.dealWithRelationalOperation(opt, this.getTrueLabel()))
+                        .append("iconst_1\n")
+                        .append("goto ").append(this.getEndIfLabel()).append("\n")
+                        .append(this.getTrueLabel()).append(":\n")
+                        .append("iconst_0\n")
+                        .append(this.getEndIfLabel()).append(":\n");
+                // if_icmp decrements 2, iconst increments 1
+                this.decrementStackCounter(1);
             }
-            case ANDB: {
-                String aux = "ifeq " + this.getTrueLabel() + "\n";
-                string.append(loadElement(instruction.getLeftOperand(), table)).append(aux);
-                string.append(loadElement(instruction.getRightOperand(), table)).append(aux);
-
+            case ANDB -> {
+                // ..., value →
+                // ...
+                String ifeq = "ifeq " + this.getTrueLabel() + "\n";
+                // Compare left operand
+                string.append(loadElement(instruction.getLeftOperand(), varTable)).append(ifeq);
+                this.decrementStackCounter(1);
+                // Compare right operand
+                string.append(loadElement(instruction.getRightOperand(), varTable)).append(ifeq);
+                this.decrementStackCounter(1);
                 string.append("iconst_1\n")
-                      .append("goto ").append(this.getEndIfLabel()).append("\n")
-                      .append(this.getTrueLabel()).append(":\n")
-                      .append("iconst_0\n")
-                      .append(this.getEndIfLabel()).append(":\n");
-
-                break;
+                        .append("goto ").append(this.getEndIfLabel()).append("\n")
+                        .append(this.getTrueLabel()).append(":\n")
+                        .append("iconst_0\n")
+                        .append(this.getEndIfLabel()).append(":\n");
+                // iconst
+                this.incrementStackCounter(1);
             }
-            case NOTB: {
-                String operand = loadElement(instruction.getLeftOperand(), table);
-
+            case NOTB -> {
+                String operand = loadElement(instruction.getLeftOperand(), varTable);
                 string.append(operand)
-                      .append("ifne ").append(this.getTrueLabel()).append("\n")
-                      .append("iconst_1\n")
-                      .append("goto ").append(this.getEndIfLabel()).append("\n")
-                      .append(this.getTrueLabel()).append(":\n")
-                      .append("iconst_0\n")
-                      .append(this.getEndIfLabel()).append(":\n");
-
-                break;
+                        .append("ifne ").append(this.getTrueLabel()).append("\n")
+                        .append("iconst_1\n")
+                        .append("goto ").append(this.getEndIfLabel()).append("\n")
+                        .append(this.getTrueLabel()).append(":\n")
+                        .append("iconst_0\n")
+                        .append(this.getEndIfLabel()).append(":\n");
+                // No need to change stack, load increments 1, ifne would dec.1 and iconst would inc.1
             }
-            default:
-                return "Error in dealWithBooleanOperation";
+            default -> {
+                return "Error in BooleansOperations\n";
+            }
         }
-
         this.conditional++;
         return string.toString();
     }
@@ -414,40 +440,53 @@ public class JasminGenerator {
     private String loadElement(Element element, HashMap<String, Descriptor> table){
         if(element instanceof LiteralElement){
             String num = ((LiteralElement) element).getLiteral();
+            this.incrementStackCounter(1);
             return this.selectConstType(num) + "\n";
         }
         else if(element instanceof ArrayOperand){
             ArrayOperand arrayop = (ArrayOperand) element;
 
             String string = String.format("aload%s\n", this.getVirtualReg(arrayop.getName(), table));
+            this.incrementStackCounter(1);
             string += loadElement(arrayop.getIndexOperands().get(0), table);
+            this.decrementStackCounter(1);
             return string + "iaload\n";
         } else if(element instanceof Operand) {
             Operand op = (Operand) element;
             switch (op.getType().getTypeOfElement()){
+                case THIS:
+                    this.incrementStackCounter(1);
+                    return "aload_0\n";
                 case INT32 , BOOLEAN:
+                    this.incrementStackCounter(1);
                     return String.format("iload%s\n", this.getVirtualReg(op.getName(), table));
                 case OBJECTREF , ARRAYREF:
+                    this.incrementStackCounter(1);
                     return String.format("aload%s\n", this.getVirtualReg(op.getName(), table));
-                case THIS:
-                    return "aload_0\n";
+                case CLASS:
+                    return "";
                 case STRING:
                 case VOID:
                 default:
                     return "Error in operand inside loadElement\n";
             }
         }
+        System.out.println(element);
         return "Error in loadElement\n";
     }
 
     private String storeElement(Operand op, HashMap<String, Descriptor> table){
-        if(op instanceof ArrayOperand)
+        if(op instanceof ArrayOperand) {
+            this.decrementStackCounter(3);
             return "iastore\n";
+        }
 
         switch (op.getType().getTypeOfElement()){
             case INT32, BOOLEAN:
+                this.decrementStackCounter(1);
                 return String.format("istore%s\n", this.getVirtualReg(op.getName(), table));
             case OBJECTREF, ARRAYREF:
+                this.decrementStackCounter(1);
                 return String.format("astore%s\n", this.getVirtualReg(op.getName(), table));
             default:
                 return "Error in storeElement\n";
@@ -481,5 +520,16 @@ public class JasminGenerator {
 
     private String getEndIfLabel() {
         return "myEndIf" + this.conditional;
+    }
+
+    private void decrementStackCounter(int i) {
+        this.counterStack -= i;
+    }
+
+    private void incrementStackCounter(int i) {
+        this.counterStack += i;
+        if (this.counterStack > this.counterMax) {
+            this.counterMax = counterStack;
+        }
     }
 }
