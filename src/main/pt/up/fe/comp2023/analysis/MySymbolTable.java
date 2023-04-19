@@ -182,6 +182,12 @@ public class MySymbolTable implements SymbolTable {
 
     @Override
     public List<Symbol> getLocalVariables(String methodName) {
+        for (MySymbolTableMethod method : methods) {
+            if (method.getName().equals(methodName)) {
+                return method.getLocalVariables();
+            }
+        }
+
         return null;
     }
 }

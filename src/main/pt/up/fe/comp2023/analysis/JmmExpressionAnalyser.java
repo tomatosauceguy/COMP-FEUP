@@ -46,9 +46,11 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
         addVisit("IfElseStat", this::dealConditionalExpression);
         addVisit("WhileStat", this::dealConditionalExpression);
 
+
+        addVisit("ArrayAssignmentStat", this::dealWithArrayAssign);
         addVisit("NewIntArrayOp", this::dealWithArrayInit);
         addVisit("ArrayAcessOp", this::dealWithArrayAccess);
-        addVisit("ArrayAssignmentStat", this::dealWithArrayAssignmennt);
+
         addVisit("IdOp", this::dealWithVariable);
         //addVisit("VarDeclaration", this::dealWithVariableDeclaration);
 
@@ -59,6 +61,7 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
         addVisit("Length", this::dealWithMethodCall);
         addVisit("NewObjectOp", this::dealWithNewObject);
         addVisit("MethodCallOp", this::dealWithAccessExpression);
+        addVisit("ExpressionStat", this::dealWtihExpressionStat);
 
         setDefaultVisit(this::dealWithDefaultVisit);
     }
@@ -236,7 +239,6 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
 
         if (children.size() == 1) {
             Map.Entry<String, String> assignment = visit(node.getJmmChild(0), true);
-
             if (assignment.getKey().equals("error")) {
                 reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), Integer.parseInt(node.get("colStart")), "Undeclared Variable: " + node.getChildren().get(0)));
                 return null;
@@ -352,16 +354,29 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
     }
 
     private Map.Entry<String, String> dealWithArrayAccess(JmmNode node, Boolean data) {
-        JmmNode index = node.getChildren().get(0);
-        Map.Entry<String, String> indexReturn = visit(index, true);
+        JmmNode leftIndex = node.getChildren().get(0);
+        JmmNode rigthIndex = node.getChildren().get(1);
 
-        if (!indexReturn.getKey().equals("int")) {
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(index.get("lineStart")), Integer.parseInt(index.get("colStart")), "Array access index is not an Integer: " + index));
+        Map.Entry<String, String> leftReturn = visit(leftIndex, true);
+        Map.Entry<String, String> rigthReturn = visit(rigthIndex, true);
+
+        if (!leftReturn.getKey().equals("int")) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(leftIndex.get("lineStart")), Integer.parseInt(leftIndex.get("colStart")), "Array access index is not an Integer: " + leftIndex));
             return Map.entry("error", "null");
         }
 
-        return Map.entry("index", indexReturn.getValue());
+        if (!rigthReturn.getKey().equals("int")) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(leftIndex.get("lineStart")), Integer.parseInt(leftIndex.get("colStart")), "Index must be of type int: " + leftIndex));
+            return Map.entry("error", "null");
+        }
+
+        return Map.entry("int", leftReturn.getValue());
     }
+    private Map.Entry<String, String> dealWithArrayAssign(JmmNode node, Boolean data){
+
+        return null;
+    }
+
 
     private Map.Entry<String, String> dealWithArrayAssignmennt(JmmNode node, Boolean data) {
         //TODO esta bue bom
@@ -452,7 +467,11 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
     }
 
     private Map.Entry<String, String> dealWithReturn(JmmNode node, Boolean space) {
+        System.out.println("before visit");
+        System.out.println("kind: " + node.getKind());
         String returnType = visit(node, true).getKey();
+
+        System.out.println("visit node: " + visit(node, true));
 
         if (returnType.equals("access")) {
             return null;
@@ -460,18 +479,27 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
 
         String[] parts = returnType.split(" ");
 
+        System.out.println("part: " + parts.length);
+        System.out.println("return type name: " + currentMethod.getReturnType().getName());
+        System.out.println("return type:: " + returnType);
+
+        if (!parts[0].equals(currentMethod.getReturnType().getName())) {
+            System.out.println("entrou");
+        }
+
         if (parts.length == 2 && currentMethod.getReturnType().isArray()) {
             if (!parts[0].equals(currentMethod.getReturnType().getName())) {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), Integer.parseInt(node.get("colStart")), "Return type mismatch"));
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), Integer.parseInt(node.get("colStart")), "Return type mismatch 1"));
             }
             return null;
         } else if (parts.length == 1 && !currentMethod.getReturnType().isArray()) {
             if (!parts[0].equals(currentMethod.getReturnType().getName())) {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), Integer.parseInt(node.get("colStart")), "Return type mismatch"));
+                System.out.println("nao devia entrar aqui");
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), Integer.parseInt(node.get("colStart")), "Return type mismatch 2"));
             }
             return null;
         } else {
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), Integer.parseInt(node.get("colStart")), "Return type mismatch"));
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), Integer.parseInt(node.get("colStart")), "Return type mismatch 3"));
         }
 
         return null;
@@ -489,6 +517,7 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
         List<JmmNode> children = node.getChildren();
         List<Type> params = getParametersList(children);
 
+        System.out.println("param list: " + params);
         String method = node.get("value");
         if (params.size() > 0) {
             for (Type param : params) {
@@ -512,7 +541,6 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
     }
 
     private List<Type> getParametersList(List<JmmNode> children) {
-        //TODO - visitor para os parametros em vez disto maybe
         List<Type> params = new ArrayList<>();
         for (JmmNode child : children) {
             switch (child.getKind()) {
@@ -539,12 +567,12 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
     private Map.Entry<String, String> dealWithAccessExpression(JmmNode node, Boolean requested) {
         JmmNode target = node.getChildren().get(0);
         Map.Entry<String, String> targetReturn = visit(target, true);
+        System.out.println("target return: " + targetReturn);
 
         if(node.getChildren().size()>1) {
             JmmNode method = node.getChildren().get(1);
-
             Map.Entry<String, String> methodReturn = visit(method, true);
-
+            System.out.println("method return: " + methodReturn);
             if (targetReturn.getKey().equals("error")) {
                 if (requested != null || !node.getJmmParent().getKind().equals("Assignment"))
                     reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), Integer.parseInt(node.get("colStart")), "Invalid Access"));
@@ -560,7 +588,7 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
                     return Map.entry("error", "null");
                 }
             } else if (targetReturn.getKey().equals("method") || targetReturn.getKey().equals(table.getClassName())) {
-                return Map.entry(methodReturn.getValue(), "null");
+                return Map.entry(methodReturn.getKey(), "null");
             } else if (targetReturn.getKey().equals("access")) {
                 return Map.entry("access", "null");
             } else if (targetReturn.getKey().equals("int") || targetReturn.getKey().equals("boolean")) {
@@ -576,24 +604,40 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
                 }
             } else if (target.get("val").equals(table.getClassName())) {
                 return Map.entry(methodReturn.getValue(), "index");
-            } else if (table.getImports().contains(target.get("val"))) {
+            } else if (table.getImports().contains(targetReturn.getKey())) {
                 return Map.entry("access", "null");
             }
-        } else if (targetReturn.getKey().equals("access")) {
+        }
+        else if (targetReturn.getKey().equals("access")) {
             return Map.entry("access", "null");
-        } else if (targetReturn.getKey().equals("int") || targetReturn.getKey().equals("boolean")) {
+        }
+        else if (targetReturn.getKey().equals("int") || targetReturn.getKey().equals("boolean")) {
             if (requested != null)
                 reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), Integer.parseInt(node.get("colStart")), "Target cannot be primitive"));
             return Map.entry("error", "null");
 
-            } else if (table.getImports().contains(target.get("val"))) {
+            } else if (table.getImports().contains(targetReturn.getKey())) {
                 return Map.entry("access", "null");
-            } else if (!table.getImports().contains(target.get("val"))) {
+            } else if (!table.getImports().contains(targetReturn.getKey()) && table.getSuper() == null) {
                 reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), Integer.parseInt(node.get("colStart")), "Class not imported"));
+            return Map.entry("error", "null");
+        }
+        else if (!this.table.getMethods().contains(node.get("name"))) {
+            if(this.table.getSuper() == null){
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), Integer.parseInt(node.get("colStart")), "Method name doesnt exist"));
+            }
+
             return Map.entry("error", "null");
         }
 
         return Map.entry("error", "null");
+    }
+
+    private Map.Entry<String, String> dealWtihExpressionStat(JmmNode node, Boolean requested) {
+        for (JmmNode child : node.getChildren()) {
+            visit(child, true);
+        }
+        return null;
     }
 }
 
