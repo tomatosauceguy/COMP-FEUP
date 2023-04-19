@@ -14,8 +14,10 @@ public class BackendStage implements JasminBackend {
     @Override
     public JasminResult toJasmin(OllirResult ollirResult) {
         ClassUnit ollirClass = ollirResult.getOllirClass();
-
+        System.out.println("----------------------------");
         String jasminCode = new JasminGenerator(ollirClass).dealWithClass();
+        System.out.println(jasminCode);
+        System.out.println("--------------------------");
 
         List<Report> reports = new ArrayList<>();
 

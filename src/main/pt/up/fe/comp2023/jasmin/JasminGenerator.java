@@ -70,8 +70,8 @@ public class JasminGenerator {
     private String dealWithMethodLimits(Method method){
         StringBuilder string = new StringBuilder();
 
-        string.append(".limit locals ").append(99).append("\n");
         string.append(".limit stack ").append(99).append("\n");
+        string.append(".limit locals ").append(99).append("\n");
 
         return string.toString();
     }
