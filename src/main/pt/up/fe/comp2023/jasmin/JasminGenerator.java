@@ -308,22 +308,14 @@ public class JasminGenerator {
         String leftOp = loadElement(instruction.getLeftOperand(), table);
         String rightOp = loadElement(instruction.getRightOperand(), table);
         String operator;
-
-        switch (instruction.getOperation().getOpType()){
-            case ADD:
-                operator = "iadd\n";
-                break;
-            case SUB:
-                operator = "isub\n";
-                break;
-            case MUL:
-                operator = "imul\n";
-                break;
-            case DIV:
-                operator = "idiv\n";
-                break;
-            default:
-                return "Error in dealWithIntOperation\n";
+        switch (instruction.getOperation().getOpType()) {
+            case ADD -> operator = "iadd\n";
+            case SUB -> operator = "isub\n";
+            case MUL -> operator = "imul\n";
+            case DIV -> operator = "idiv\n";
+            default -> {
+                return "Error in IntOperation\n";
+            }
         }
         this.decrementStackCounter(1);
         return leftOp + rightOp + operator;
