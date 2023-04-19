@@ -43,6 +43,7 @@ public class JmmAnalyser implements JmmAnalysis {
         expressionsAnalyser.visit(node, null);
         System.out.println("Semantic Analysis Done!");
 
+
         return new JmmSemanticsResult(parserResult, symbolTable, expressionsAnalyser.getReports());
     }
 }
