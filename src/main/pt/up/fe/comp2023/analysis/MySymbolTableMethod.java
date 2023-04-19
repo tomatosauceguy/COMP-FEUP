@@ -20,6 +20,11 @@ public class MySymbolTableMethod {
         localVariables.put(variable, false);
     }
 
+    public List<Symbol> getLocalVariables() {
+        return new ArrayList<>(this.localVariables.keySet());
+    }
+
+
     public String getName() {
         return name;
     }

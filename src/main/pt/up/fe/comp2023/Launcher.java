@@ -43,9 +43,12 @@ public class    Launcher {
         TestUtils.noErrors(parserResult.getReports());
 
         JmmAnalyser analyser = new JmmAnalyser();
-        JmmSemanticsResult jmmAnalysis =  analyser.semanticAnalysis(parserResult);
 
-        jmmAnalysis.getReports();
+        JmmSemanticsResult jmmAnalysisResult =  analyser.semanticAnalysis(parserResult);
+
+
+
+        jmmAnalysisResult.getReports();
         //System.out.println("getreports: " + jmmAnalysis.getReports());
 
         /*
