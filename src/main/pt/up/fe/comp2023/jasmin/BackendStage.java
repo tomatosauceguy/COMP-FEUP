@@ -9,6 +9,7 @@ import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp.jmm.report.Stage;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class BackendStage implements JasminBackend {
@@ -27,7 +28,7 @@ public class BackendStage implements JasminBackend {
             List<Report> reports = new ArrayList<>();
             return new JasminResult(ollirResult, JasminCode, reports);
         } catch (OllirErrorException f){
-            return new JasminResult(ollirClass.getClassName(), null, List.of(Report.newError(Stage.GENERATION, -1, -1,
+            return new JasminResult(ollirClass.getClassName(), null, Arrays.asList(Report.newError(Stage.GENERATION, -1, -1,
                     "Expection during Jasmin Generator", f)));
         }
     }
