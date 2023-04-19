@@ -308,22 +308,14 @@ public class JasminGenerator {
         String leftOp = loadElement(instruction.getLeftOperand(), table);
         String rightOp = loadElement(instruction.getRightOperand(), table);
         String operator;
-
-        switch (instruction.getOperation().getOpType()){
-            case ADD:
-                operator = "iadd\n";
-                break;
-            case SUB:
-                operator = "isub\n";
-                break;
-            case MUL:
-                operator = "imul\n";
-                break;
-            case DIV:
-                operator = "idiv\n";
-                break;
-            default:
-                return "Error in dealWithIntOperation\n";
+        switch (instruction.getOperation().getOpType()) {
+            case ADD -> operator = "iadd\n";
+            case SUB -> operator = "isub\n";
+            case MUL -> operator = "imul\n";
+            case DIV -> operator = "idiv\n";
+            default -> {
+                return "Error in IntOperation\n";
+            }
         }
         this.decrementStackCounter(1);
         return leftOp + rightOp + operator;
@@ -438,41 +430,47 @@ public class JasminGenerator {
     }
 
     private String loadElement(Element element, HashMap<String, Descriptor> table){
-        if(element instanceof LiteralElement){
+        if (element instanceof LiteralElement) {
             String num = ((LiteralElement) element).getLiteral();
             this.incrementStackCounter(1);
             return this.selectConstType(num) + "\n";
         }
-        else if(element instanceof ArrayOperand){
+        else if (element instanceof ArrayOperand) {
             ArrayOperand arrayop = (ArrayOperand) element;
 
-            String string = String.format("aload%s\n", this.getVirtualReg(arrayop.getName(), table));
+            String stringBuilder = String.format("aload%s\n", this.getVirtualReg(arrayop.getName(), table));
             this.incrementStackCounter(1);
-            string += loadElement(arrayop.getIndexOperands().get(0), table);
+
+            stringBuilder += loadElement(arrayop.getIndexOperands().get(0), table);
+
             this.decrementStackCounter(1);
-            return string + "iaload\n";
-        } else if(element instanceof Operand) {
+            return stringBuilder + "iaload\n";
+        }
+        else if (element instanceof Operand) {
             Operand op = (Operand) element;
-            switch (op.getType().getTypeOfElement()){
-                case THIS:
+            switch (op.getType().getTypeOfElement()) {
+                case THIS -> {
                     this.incrementStackCounter(1);
                     return "aload_0\n";
-                case INT32 , BOOLEAN:
+                }
+                case INT32, BOOLEAN -> {
                     this.incrementStackCounter(1);
                     return String.format("iload%s\n", this.getVirtualReg(op.getName(), table));
-                case OBJECTREF , ARRAYREF:
+                }
+                case OBJECTREF, ARRAYREF -> {
                     this.incrementStackCounter(1);
                     return String.format("aload%s\n", this.getVirtualReg(op.getName(), table));
-                case CLASS:
+                }
+                case CLASS -> {
                     return "";
-                case STRING:
-                case VOID:
-                default:
-                    return "Error in operand inside loadElement\n";
+                }
+                default -> {
+                    return "Error in operand loadElements\n";
+                }
             }
         }
         System.out.println(element);
-        return "Error in loadElement\n";
+        return "Error in loadElements\n";
     }
 
     private String storeElement(Operand op, HashMap<String, Descriptor> table){
