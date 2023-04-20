@@ -48,62 +48,6 @@ public class MySymbolTableMethod {
         return params;
     }
 
-    public List<Type> getParameterTypes() {
-        List<Type> params = new ArrayList<>();
-
-        for (Map.Entry<Symbol, String> parameter : parameters) {
-            params.add(parameter.getKey().getType());
-        }
-        return params;
-    }
-
-    public boolean initializeField(Symbol symbol) {
-        if (this.localVariables.containsKey(symbol)) {
-            this.localVariables.put(symbol, true);
-            return true;
-        }
-        return false;
-    }
-
-    public Map.Entry<Symbol, Boolean> getField(String name) {
-        for (Map.Entry<Symbol, Boolean> field : this.localVariables.entrySet()) {
-            if (field.getKey().getName().equals(name))
-                return field;
-        }
-
-        for (Map.Entry<Symbol, String> param : this.parameters) {
-            if (param.getKey().getName().equals(name))
-                return Map.entry(param.getKey(), true);
-        }
-
-        return null;
-    }
-
-    public static List<Type> parseParameters(String params) {
-        if (params.equals("")) return new ArrayList<>();
-
-        String[] typesString = params.split(",");
-
-        List<Type> types = new ArrayList<>();
-
-        for (String s : typesString) {
-            String[] aux = s.split(" ");
-            types.add(new Type(aux[0], aux.length == 2));
-        }
-
-        return types;
-    }
-
-    public static boolean matchParameters(List<Type> types1, List<Type> types2) {
-        for (int i = 0; i < types1.size(); i++) {
-            if (!types1.get(i).equals(types2.get(i))) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder("ast.JmmMethod").append("\n");

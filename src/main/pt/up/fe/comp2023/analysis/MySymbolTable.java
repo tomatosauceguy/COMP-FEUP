@@ -4,7 +4,6 @@ import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.ast.JmmNode;
-import pt.up.fe.comp.jmm.report.Report;
 
 import java.util.*;
 
@@ -13,7 +12,7 @@ public class MySymbolTable implements SymbolTable {
     private final List<String> imports = new ArrayList<>();
     private String className;
     private String superClassName;
-    private final Map<Symbol, Boolean> fields = new HashMap<>();
+    private List<Symbol> fields =new ArrayList<>();
     private List<MySymbolTableMethod> methods = new ArrayList<>();
     private MySymbolTableMethod currentMethod;
 
@@ -30,7 +29,7 @@ public class MySymbolTable implements SymbolTable {
     }
 
     public void addField(Symbol field) {
-        fields.put(field, false);
+        this.fields.add(field);
     }
 
     public MySymbolTableMethod addMethod(String name, Type returnType) {
@@ -39,31 +38,6 @@ public class MySymbolTable implements SymbolTable {
         return currentMethod;
     }
 
-    public MySymbolTableMethod getMethod(String name, List<Type> params, Type returnType) {
-        for (MySymbolTableMethod method : methods) {
-            if (method.getName().equals(name) && returnType.equals(method.getReturnType()) && params.size() == method.getParameters().size()) {
-                if (MySymbolTableMethod.matchParameters(params, method.getParameterTypes())) {
-                    return method;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    public static Type getType(JmmNode node, String attribute) {
-        Type type;
-        if (node.get(attribute).equals("int[]"))
-            type = new Type("int", true);
-        else if (node.get(attribute).equals("int"))
-            type = new Type("int", false);
-        else
-            type = new Type(node.get(attribute), false);
-
-        return type;
-    }
-
-/*
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder("SYMBOL TABLE\n");
@@ -84,7 +58,7 @@ public class MySymbolTable implements SymbolTable {
         }
 
         return builder.toString();
-    }*/
+    }
 
     @Override
     public List<String> getImports() {
@@ -101,27 +75,13 @@ public class MySymbolTable implements SymbolTable {
 
     @Override
     public List<Symbol> getFields() {
-        return new ArrayList<>(this.fields.keySet());
-    }
-
-    public Map.Entry<Symbol, Boolean> getField(String name) {
-        for (Map.Entry<Symbol, Boolean> field : this.fields.entrySet()) {
-            if (field.getKey().getName().equals(name))
-                return field;
-        }
-        return null;
-    }
-
-    public boolean initializeField(Symbol symbol) {
-        if (this.fields.containsKey(symbol)) {
-            this.fields.put(symbol, true);
-            return true;
-        }
-        return false;
+        return this.fields;
     }
 
     @Override
     public List<String> getMethods() {
+        System.out.println("In get methods");
+        System.out.println(this.methods);
         List<String> methods = new ArrayList<>();
         for (MySymbolTableMethod method : this.methods) {
             methods.add(method.getName());
