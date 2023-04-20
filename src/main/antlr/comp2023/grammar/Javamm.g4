@@ -35,7 +35,7 @@ varDeclaration
 
 methodDeclaration
     : ('public')? type '(' ( type ( ',' type )* )? ')' '{' ( varDeclaration )* ( statement )* 'return' expression ';' '}'  #RegularMethod
-    | ('public')? 'static' 'void' 'main' '(' 'String' '[' ']' ID ')' '{' ( varDeclaration )* ( statement )* '}'  #MainMethod
+    | ('public')? 'static' 'void' name = 'main' '(' 'String' '[' ']' ID ')' '{' ( varDeclaration )* ( statement )* '}'  #MainMethod
     ;
 
 type locals [boolean isArray = false]
@@ -51,25 +51,28 @@ statement
     | 'if' '(' expression ')' statement 'else' statement #IfElseStat
     | 'while' '(' expression ')' statement  #WhileStat
     | expression ';'  #ExpressionStat
-    | ID '=' expression ';' #AssignmentStat
-    | ID '[' expression ']' '=' expression ';'  #ArrayAssigmentStat
+    | variable = ID '=' expression ';' #AssignmentStat
+    | arrayVar = ID '[' expression ']' '=' expression ';'  #ArrayAssignmentStat
     ;
 
 expression
     : '(' expression ')'  #ParenOp
     | expression '[' expression ']' #ArrayAcessOp
     | expression '.' 'length'  #ArrayLengthOp
-    | expression '.' ID '(' ( expression ( ',' expression )* )? ')'  #MethodCallOp
+    | expression '.' name = ID '(' ( expression ( ',' expression )* )? ')'  #MethodCallOp
     | '!' expression  #NotExpression
-    | expression ('*' | '/') expression  #MultDivOp
-    | expression ('+' | '-') expression  #BinaryOp
-    | expression '<' expression  #BinaryOp
-    | expression '&&' expression #BinaryOp
+    | expression ('++' | '--') #CrementOp
+    | expression ('*' | '/') expression  #BinaryOperator
+    | expression ('+' | '-') expression  #BinaryOperator
+    | expression ('<' | '<=' | '>' | '>=' ) expression  #RelationalExpression
+    | expression ('==' | '!=') expression #RelationalExpression
+    | expression '&&' expression #AndExpression
+    | expression '||' expression #BinaryOp
     | 'new' 'int' '[' expression ']'  #NewIntArrayOp
-    | 'new' ID '(' ')'  #NewObjectOp
+    | 'new' name = ID '(' ')'  #NewObjectOp
     | val=INT  #IntLiteral
-    | val='true'  #TrueLiteral
-    | val='false'  #FalseLiteral
+    | val='true'  #BooleanLiteral
+    | val='false'  #BooleanLiteral
     | val=ID  #IdOp
     | val='this'  #ThisOp
     ;

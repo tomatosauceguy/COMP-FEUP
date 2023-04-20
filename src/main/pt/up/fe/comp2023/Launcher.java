@@ -43,12 +43,19 @@ public class    Launcher {
         TestUtils.noErrors(parserResult.getReports());
 
         JmmAnalyser analyser = new JmmAnalyser();
-        JmmSemanticsResult jmmAnalysis =  analyser.semanticAnalysis(parserResult);
+
+        JmmSemanticsResult jmmAnalysisResult =  analyser.semanticAnalysis(parserResult);
+
+
+
+        jmmAnalysisResult.getReports();
+        //System.out.println("getreports: " + jmmAnalysis.getReports());
 
         /*
         if (verifyReports(semanticsResult.getReports())) return;
         printSymbolTable(semanticsResult);
         */
+        System.out.println(parserResult.getRootNode().toTree());
 
         // ... add remaining stages
     }
@@ -70,5 +77,4 @@ public class    Launcher {
 
         return config;
     }
-
 }
