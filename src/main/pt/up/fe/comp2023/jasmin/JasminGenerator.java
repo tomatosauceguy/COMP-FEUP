@@ -7,8 +7,6 @@ import java.util.Map;
 
 public class JasminGenerator {
     private ClassUnit classUnit;
-    private int counterStack;
-    private int counterMax;
     private int conditional;
 
 
@@ -21,22 +19,18 @@ public class JasminGenerator {
 
         string.append(".class ").append(classUnit.getClassName()).append("\n");
 
-        if (classUnit.getSuperClass() != null) {
+        if(classUnit.getSuperClass() != null){
             string.append(".super ").append(classUnit.getSuperClass()).append("\n");
-        } else {
-            string.append(".super java/lang/Object\n");
         }
+        else string.append(".super java/lang/Object\n");
 
-        for (Field f : classUnit.getFields()) {
+        for (Field f : classUnit.getFields()){
             string.append(".field '").append(f.getFieldName()).append("' ").append(this.convertType(f.getFieldType())).append("\n");
         }
 
         for (Method method : classUnit.getMethods()) {
-            this.counterStack = 0;
-            this.counterMax = 0;
-
             string.append(this.dealWithMethodHeader(method));
-            String instructions = this.dealWithMethodIntructions(method);
+            String instructions = this.dealtWithMethodIntructions(method);
             if (!method.isConstructMethod()) {
                 string.append(this.dealWithMethodLimits(method));
                 string.append(instructions);
@@ -46,59 +40,53 @@ public class JasminGenerator {
         return string.toString();
     }
 
-    private String dealWithMethodHeader(Method method) {
-        if (method.isConstructMethod()) {
+    private String dealWithMethodHeader(Method method){
+        if(method.isConstructMethod()) {
             String classSuper = "java/lang/Object";
 
-            if (classUnit.getSuperClass() != null) {
+            if (classUnit.getSuperClass() != null)
                 classSuper = classUnit.getSuperClass();
-            }
 
-            return "\n.method public <init>()V\naload_0\ninvokespecial " + classSuper + ".<init>()V\nreturn\n.end method\n";
+            return "\n.method public <init>()V\naload_0\ninvokespecial " + classSuper +  "/<init>()V\nreturn\n.end method\n";
         }
 
         StringBuilder string = new StringBuilder("\n.method").append(" ").append(method.getMethodAccessModifier().name().toLowerCase()).append(" ");
-        if (method.isStaticMethod()) {
+
+        if(method.isStaticMethod())
             string.append("static ");
-        } else if (method.isFinalMethod()) {
+        if(method.isFinalMethod())
             string.append("final ");
-        }
-        // Parameters type
+
         string.append(method.getMethodName()).append("(");
-        for (Element element : method.getParams()) {
-            string.append(convertType(element.getType()));
-        }
-        // Return type
+        for(Element l : method.getParams())
+                string.append(convertType(l.getType()));
+
         string.append(")").append(this.convertType(method.getReturnType())).append("\n");
 
         return string.toString();
     }
 
-
-        // going to be modified later because of values
+    // going to be modified later because of values
     private String dealWithMethodLimits(Method method){
         StringBuilder string = new StringBuilder();
-        int localCount = method.getVarTable().size();
-        if (!method.isStaticMethod()) {
-            localCount++;
-        }
-        string.append(".limit locals ").append(localCount).append("\n");
-        string.append(".limit stack ").append(counterMax).append("\n");
+
+        string.append(".limit stack ").append(99).append("\n");
+        string.append(".limit locals ").append(99).append("\n");
 
         return string.toString();
     }
 
 
-    private String dealWithMethodIntructions(Method method){
+    private String dealtWithMethodIntructions(Method method){
         StringBuilder string = new StringBuilder();
         method.getVarTable();
         for (Instruction instruction : method.getInstructions()) {
             string.append(dealWithInstruction(instruction, method.getVarTable(), method.getLabels()));
             if (instruction instanceof CallInstruction && ((CallInstruction) instruction).getReturnType().getTypeOfElement() != ElementType.VOID) {
                 string.append("pop\n");
-                this.decrementStackCounter(1);
             }
         }
+
         string.append("\n.end method\n");
         return string.toString();
     }
@@ -106,99 +94,100 @@ public class JasminGenerator {
     private String dealWithInstruction(Instruction instruction, HashMap<String, Descriptor> table, HashMap<String, Instruction> methodLabels){
         StringBuilder string = new StringBuilder();
         for (Map.Entry<String, Instruction> entry : methodLabels.entrySet()) {
-            if (entry.getValue().equals(instruction)) {
+            if (entry.getValue().equals(instruction)){
                 string.append(entry.getKey()).append(":\n");
             }
         }
-        return switch (instruction.getInstType()) {
-            case ASSIGN ->
-                    string.append(dealWithAssignment((AssignInstruction) instruction, table)).toString();
-            case NOPER ->
-                    string.append(dealWithSingleOpInstruction((SingleOpInstruction) instruction, table)).toString();
-            case BINARYOPER ->
-                    string.append(dealWithBinaryOpInstruction((BinaryOpInstruction) instruction, table)).toString();
-            case UNARYOPER -> "";
-            case CALL ->
-                    string.append(dealWithCallInstruction((CallInstruction) instruction, table)).toString();
-            case GOTO ->
-                    string.append(dealWithGotoInstruction((GotoInstruction) instruction, table)).toString();
-            case PUTFIELD ->
-                    string.append(dealWithPutFieldInstruction((PutFieldInstruction) instruction, table)).toString();
-            case GETFIELD ->
-                    string.append(dealWithGetFieldInstruction((GetFieldInstruction) instruction, table)).toString();
-            case RETURN ->
-                    string.append(dealWithReturnInstruction((ReturnInstruction) instruction, table)).toString();
-            default -> "Error in dealWithInstructions";
-        };
+
+        switch (instruction.getInstType()) {
+            case ASSIGN:
+                return string.append(dealWithAssignment((AssignInstruction) instruction, table)).toString();
+            case CALL:
+                return string.append(dealWithCallInstruction((CallInstruction) instruction, table)).toString();
+            case GOTO:
+                return string.append(dealWithGotoInstruction((GotoInstruction) instruction, table)).toString();
+            case BRANCH:
+            case RETURN:
+                return string.append(dealWithReturnInstruction((ReturnInstruction) instruction, table)).toString();
+            case PUTFIELD:
+                return string.append(dealWithPutFieldInstruction((PutFieldInstruction) instruction, table)).toString();
+            case GETFIELD:
+                return string.append(dealWithGetFieldInstruction((GetFieldInstruction) instruction, table)).toString();
+            case UNARYOPER:
+                return "TODO";
+            case BINARYOPER:
+                return string.append(dealWithBinaryOpInstruction((BinaryOpInstruction) instruction, table)).toString();
+            case NOPER:
+                return string.append(dealWithSingleOpInstruction((SingleOpInstruction) instruction, table)).toString();
+            default:
+                return "Error in dealWithInstruction";
+        }
     }
 
     private String dealWithAssignment(AssignInstruction instruction, HashMap<String, Descriptor> table){
         String string = "";
-        Operand operand = (Operand) instruction.getDest();
+        Operand op = (Operand) instruction.getDest();
 
-        if (operand instanceof ArrayOperand) {
-            ArrayOperand arraop = (ArrayOperand) operand;
-            string += String.format("aload%s\n", this.getVirtualReg(arraop.getName(), table));
-            this.incrementStackCounter(1);
-            string += loadElement(arraop.getIndexOperands().get(0), table);
+        if(op instanceof ArrayOperand arrayop){
+            //Loading array
+            string += String.format("aload%s\n", this.getVirtualReg(op.getName(), table));
+            //Loading index
+            string += loadElement(arrayop.getIndexOperands().get(0), table);
         }
+
         string += dealWithInstruction(instruction.getRhs(), table, new HashMap<String, Instruction>());
-        if(!(operand.getType().getTypeOfElement().equals(ElementType.OBJECTREF) && instruction.getRhs() instanceof CallInstruction)) {
-            string += this.storeElement(operand, table);
+        if(!(op.getType().getTypeOfElement().equals(ElementType.OBJECTREF) && instruction.getRhs() instanceof CallInstruction)){
+            string += this.storeElement(op, table);
         }
+
         return string;
     }
 
     private String dealWithCallInstruction(CallInstruction instruction, HashMap<String, Descriptor> table){
         String string = "";
-        CallType callType = instruction.getInvocationType();
+        CallType call = instruction.getInvocationType();
 
-        switch (callType) {
-            case invokespecial ->
-                    string += this.dealWithInvoke(instruction, table, callType, ((ClassType) instruction.getFirstArg().getType()).getName());
-            case invokestatic ->
-                    string += this.dealWithInvoke(instruction, table, callType, ((Operand) instruction.getFirstArg()).getName());
-            case invokevirtual ->
-                    string += this.dealWithInvoke(instruction, table, callType, ((ClassType) instruction.getFirstArg().getType()).getName());
-            case arraylength -> {
-                    string += this.loadElement(instruction.getFirstArg(), table);
-                    string += "arraylength\n";
-            }
-            case NEW -> string += this.dealWithNewObject(instruction, table);
-            default -> {
-                return "Erro in CallInstruction";
-            }
+        switch (call){
+            case invokevirtual, invokespecial:
+                string += this.dealWithInvoke(instruction, table, call, ((ClassType)instruction.getFirstArg().getType()).getName());
+                break;
+            case invokestatic:
+                string += this.dealWithInvoke(instruction, table, call, ((Operand)instruction.getFirstArg()).getName());
+                break;
+            case NEW:
+                string += this.dealWithNewObject(instruction, table);
+                break;
+            case arraylength:
+                string += this.loadElement(instruction.getFirstArg(), table);
+                string += "arraylength\n";
+                break;
+            default:
+                return "Error in dealWithCallInstruction";
         }
         return string;
     }
 
     private String dealWithInvoke(CallInstruction instruction, HashMap<String, Descriptor> table, CallType call, String classN){
         String string = "";
-        String function = ((LiteralElement) instruction.getSecondArg()).getLiteral();
+
+        String literal = ((LiteralElement) instruction.getSecondArg()).getLiteral();
         String params = "";
 
-        if (!function.equals("\"<init>\"")) {
+        if(!literal.equals("\"<init>\"")){
             string += this.loadElement(instruction.getFirstArg(), table);
         }
 
-        int nParams = 0;
-        for (Element element : instruction.getListOfOperands()) {
+        for(Element element : instruction.getListOfOperands()){
             string += this.loadElement(element, table);
             params += this.convertType(element.getType());
-            nParams++;
         }
 
-        if (!instruction.getInvocationType().equals(CallType.invokestatic)) {
-            nParams += 1;
-        }
-        this.decrementStackCounter(nParams);
-        if (instruction.getReturnType().getTypeOfElement() != ElementType.VOID) {
-            this.incrementStackCounter(1);
-        }
-        string += call.name() + " " + this.getOjectClassName(classN) + "." + function.replace("\"","") + "(" + params + ")" + this.convertType(instruction.getReturnType()) + "\n";
-        if (function.equals("\"<init>\"") && !classN.equals("this")) {
+        string += call.name() + " " + this.getOjectClassName(classN) + "/" + literal.replace("\"","") + "(" + params + ")" + this.convertType(instruction.getReturnType()) + "\n";
+
+        if (literal.equals("\"<init>\"") && !classN.equals("this")) {
             string += this.storeElement((Operand) instruction.getFirstArg(), table);
         }
+
         return string;
     }
 
@@ -206,14 +195,14 @@ public class JasminGenerator {
         Element elem = instruction.getFirstArg();
         String string = "";
 
-        if (elem.getType().getTypeOfElement().equals(ElementType.ARRAYREF)) {
+        if(elem.getType().getTypeOfElement().equals(ElementType.ARRAYREF)){
             string += this.loadElement(instruction.getListOfOperands().get(0), table);
             string += "newarray int\n";
         }
-        else if (elem.getType().getTypeOfElement().equals(ElementType.OBJECTREF)){
-            this.incrementStackCounter(2);
-            string += "new " + this.getOjectClassName(((Operand)elem).getName()) + "\ndup\n";
-        }
+
+        if(elem.getType().getTypeOfElement().equals(ElementType.OBJECTREF))
+            string += "new " + this.getOjectClassName(((Operand) elem).getName()) + "\ndup\n";
+
         return string;
     }
 
@@ -232,43 +221,40 @@ public class JasminGenerator {
             case INT32:
             case BOOLEAN:
                 string = loadElement(instruction.getOperand(), table);
-                this.decrementStackCounter(1);
                 string += "ireturn";
                 break;
             case ARRAYREF:
             case OBJECTREF:
                 string = loadElement(instruction.getOperand(), table);
-                this.decrementStackCounter(1);
-                string  += "areturn";
+                string += "areturn";
                 break;
             default:
                 break;
         }
+
         return string;
     }
 
     private String dealWithPutFieldInstruction(PutFieldInstruction instruction, HashMap<String, Descriptor> table){
         String string = "";
-
-        Operand obj = (Operand)instruction.getFirstOperand();
-        Operand var = (Operand)instruction.getSecondOperand();
+        Operand object = (Operand) instruction.getFirstOperand();
+        Operand variable = (Operand) instruction.getSecondOperand();
         Element value = instruction.getThirdOperand();
 
-        string += this.loadElement(obj, table);
+        string += this.loadElement(object, table);
         string += this.loadElement(value, table);
 
-        this.decrementStackCounter(2);
-        return string + "putfield " + classUnit.getClassName() + "/" + var.getName() + " " + convertType(var.getType()) + "\n";
+        return string + "putfield " + classUnit.getClassName() + "/" + variable.getName() + " " + convertType(variable.getType()) + "\n";
     }
 
     private String dealWithGetFieldInstruction(GetFieldInstruction instruction, HashMap<String, Descriptor> table){
         String string = "";
+        Operand object = (Operand) instruction.getFirstOperand();
+        Operand variable = (Operand) instruction.getSecondOperand();
 
-        Operand obj = (Operand)instruction.getFirstOperand();
-        Operand var = (Operand)instruction.getSecondOperand();
-        string += this.loadElement(obj, table);
+        string += this.loadElement(object, table);
 
-        return string + "getfield " + classUnit.getClassName() + "/" + var.getName() + " " + convertType(var.getType()) +  "\n";
+        return string + "getfield " + classUnit.getClassName() + "/" + variable.getName() + " " + convertType(variable.getType()) + "\n";
     }
 
     private String dealWithBinaryOpInstruction(BinaryOpInstruction instruction, HashMap<String, Descriptor> table){
@@ -292,63 +278,76 @@ public class JasminGenerator {
         String leftOp = loadElement(instruction.getLeftOperand(), table);
         String rightOp = loadElement(instruction.getRightOperand(), table);
         String operator;
-        switch (instruction.getOperation().getOpType()) {
-            case ADD -> operator = "iadd\n";
-            case SUB -> operator = "isub\n";
-            case MUL -> operator = "imul\n";
-            case DIV -> operator = "idiv\n";
-            default -> {
-                return "Error in IntOperation\n";
-            }
+
+        switch (instruction.getOperation().getOpType()){
+            case ADD:
+                operator = "iadd\n";
+                break;
+            case SUB:
+                operator = "isub\n";
+                break;
+            case MUL:
+                operator = "imul\n";
+                break;
+            case DIV:
+                operator = "idiv\n";
+                break;
+            default:
+                return "Error in dealWithIntOperation\n";
         }
-        this.decrementStackCounter(1);
         return leftOp + rightOp + operator;
     }
 
-    private String dealWithBooleanOperation(BinaryOpInstruction instruction, HashMap<String, Descriptor> table) {
+    private String dealWithBooleanOperation(BinaryOpInstruction instruction, HashMap<String, Descriptor> table){
         OperationType opt = instruction.getOperation().getOpType();
         StringBuilder string = new StringBuilder();
-        switch (instruction.getOperation().getOpType()) {
-            case LTH, GTE -> {
-                String leftOperand = loadElement(instruction.getLeftOperand(), table);
-                String rightOperand = loadElement(instruction.getRightOperand(), table);
-                string.append(leftOperand)
-                        .append(rightOperand)
-                        .append(this.dealWithRelationalOperation(opt, this.getTrueLabel()))
-                        .append("iconst_1\n")
-                        .append("goto ").append(this.getEndIfLabel()).append("\n")
-                        .append(this.getTrueLabel()).append(":\n")
-                        .append("iconst_0\n")
-                        .append(this.getEndIfLabel()).append(":\n");
-                this.decrementStackCounter(1);
+
+        switch (instruction.getOperation().getOpType()){
+            case LTH:
+            case GTE: {
+                String leftOp = loadElement(instruction.getLeftOperand(), table);
+                String rightOp = loadElement(instruction.getRightOperand(), table);
+
+                string.append(leftOp)
+                      .append(rightOp)
+                      .append(this.dealWithRelationalOperation(opt, this.getTrueLabel()))
+                      .append("iconst_1\n")
+                      .append("goto ").append(this.getEndIfLabel()).append("\n")
+                      .append(this.getTrueLabel()).append(":\n")
+                      .append("iconst_0\n")
+                      .append(this.getEndIfLabel()).append(":\n");
+                break;
             }
-            case ANDB -> {
-                String ifeq = "ifeq " + this.getTrueLabel() + "\n";
-                string.append(loadElement(instruction.getLeftOperand(), table)).append(ifeq);
-                this.decrementStackCounter(1);
-                string.append(loadElement(instruction.getRightOperand(), table)).append(ifeq);
-                this.decrementStackCounter(1);
+            case ANDB: {
+                String aux = "ifeq " + this.getTrueLabel() + "\n";
+                string.append(loadElement(instruction.getLeftOperand(), table)).append(aux);
+                string.append(loadElement(instruction.getRightOperand(), table)).append(aux);
+
                 string.append("iconst_1\n")
-                        .append("goto ").append(this.getEndIfLabel()).append("\n")
-                        .append(this.getTrueLabel()).append(":\n")
-                        .append("iconst_0\n")
-                        .append(this.getEndIfLabel()).append(":\n");
-                this.incrementStackCounter(1);
+                      .append("goto ").append(this.getEndIfLabel()).append("\n")
+                      .append(this.getTrueLabel()).append(":\n")
+                      .append("iconst_0\n")
+                      .append(this.getEndIfLabel()).append(":\n");
+
+                break;
             }
-            case NOTB -> {
+            case NOTB: {
                 String operand = loadElement(instruction.getLeftOperand(), table);
+
                 string.append(operand)
-                        .append("ifne ").append(this.getTrueLabel()).append("\n")
-                        .append("iconst_1\n")
-                        .append("goto ").append(this.getEndIfLabel()).append("\n")
-                        .append(this.getTrueLabel()).append(":\n")
-                        .append("iconst_0\n")
-                        .append(this.getEndIfLabel()).append(":\n");
+                      .append("ifne ").append(this.getTrueLabel()).append("\n")
+                      .append("iconst_1\n")
+                      .append("goto ").append(this.getEndIfLabel()).append("\n")
+                      .append(this.getTrueLabel()).append(":\n")
+                      .append("iconst_0\n")
+                      .append(this.getEndIfLabel()).append(":\n");
+
+                break;
             }
-            default -> {
-                return "Error in BooleansOperations\n";
-            }
+            default:
+                return "Error in dealWithBooleanOperation";
         }
+
         this.conditional++;
         return string.toString();
     }
@@ -369,28 +368,21 @@ public class JasminGenerator {
         }
 
         switch (elem) {
-            case INT32 -> {
+            case INT32:
                 return string + "I";
-            }
-            case BOOLEAN -> {
+            case BOOLEAN:
                 return string + "Z";
-            }
-            case STRING -> {
-                return string + "Ljava/lang/String;";
-            }
-            case OBJECTREF -> {
+            case OBJECTREF:
                 String className = ((ClassType) type).getName();
                 return string + "L" + this.getOjectClassName(className) + ";";
-            }
-            case CLASS -> {
+            case CLASS:
                 return "CLASS";
-            }
-            case VOID -> {
+            case STRING:
+                return string + "Ljava/lang/String;";
+            case VOID:
                 return "V";
-            }
-            default -> {
+            default:
                 return "Error converting ElementType";
-            }
         }
     }
 
@@ -403,8 +395,8 @@ public class JasminGenerator {
         return className;
     }
 
-    private String getVirtualReg(String varName, HashMap<String, Descriptor> table) {
-        int virtualReg = table.get(varName).getVirtualReg();
+    private String getVirtualReg(String varName, HashMap<String, Descriptor> varTable) {
+        int virtualReg = varTable.get(varName).getVirtualReg();
         if (virtualReg > 3) {
             return " " + virtualReg;
         }
@@ -412,65 +404,45 @@ public class JasminGenerator {
     }
 
     private String loadElement(Element element, HashMap<String, Descriptor> table){
-        if (element instanceof LiteralElement) {
+        if(element instanceof LiteralElement){
             String num = ((LiteralElement) element).getLiteral();
-            this.incrementStackCounter(1);
             return this.selectConstType(num) + "\n";
         }
-        else if (element instanceof ArrayOperand) {
+        else if(element instanceof ArrayOperand){
             ArrayOperand arrayop = (ArrayOperand) element;
-            String stringBuilder = String.format("aload%s\n", this.getVirtualReg(arrayop.getName(), table));
-            this.incrementStackCounter(1);
-            stringBuilder += loadElement(arrayop.getIndexOperands().get(0), table);
-            this.decrementStackCounter(1);
-            return stringBuilder + "iaload\n";
-        }
-        else if (element instanceof Operand) {
+
+            String string = String.format("aload%s\n", this.getVirtualReg(arrayop.getName(), table));
+            string += loadElement(arrayop.getIndexOperands().get(0), table);
+            return string + "iaload\n";
+        } else if(element instanceof Operand) {
             Operand op = (Operand) element;
-            switch (op.getType().getTypeOfElement()) {
-                case THIS -> {
-                    this.incrementStackCounter(1);
-                    return "aload_0\n";
-                }
-                case INT32, BOOLEAN -> {
-                    this.incrementStackCounter(1);
+            switch (op.getType().getTypeOfElement()){
+                case INT32 , BOOLEAN:
                     return String.format("iload%s\n", this.getVirtualReg(op.getName(), table));
-                }
-                case OBJECTREF, ARRAYREF -> {
-                    this.incrementStackCounter(1);
+                case OBJECTREF , ARRAYREF:
                     return String.format("aload%s\n", this.getVirtualReg(op.getName(), table));
-                }
-                case CLASS -> {
-                    return "";
-                }
-                default -> {
-                    return "Error in operand loadElements\n";
-                }
+                case THIS:
+                    return "aload_0\n";
+                case STRING:
+                case VOID:
+                default:
+                    return "Error in operand inside loadElement\n";
             }
         }
-        System.out.println(element);
         return "Error in loadElement\n";
     }
 
     private String storeElement(Operand op, HashMap<String, Descriptor> table){
-        if(op instanceof ArrayOperand) {
-            this.decrementStackCounter(3);
+        if(op instanceof ArrayOperand)
             return "iastore\n";
-        }
 
-        switch (op.getType().getTypeOfElement()) {
-            case INT32:
-            case BOOLEAN: {
-                this.decrementStackCounter(1);
+        switch (op.getType().getTypeOfElement()){
+            case INT32, BOOLEAN:
                 return String.format("istore%s\n", this.getVirtualReg(op.getName(), table));
-            }
-            case OBJECTREF:
-            case ARRAYREF: {
-                this.decrementStackCounter(1);
+            case OBJECTREF, ARRAYREF:
                 return String.format("astore%s\n", this.getVirtualReg(op.getName(), table));
-            }
             default:
-                return "Error in storeElements";
+                return "Error in storeElement\n";
         }
     }
 
@@ -485,11 +457,14 @@ public class JasminGenerator {
     }
 
     private String dealWithRelationalOperation(OperationType opt, String string) {
-        return switch (opt) {
-            case LTH -> String.format("if_icmpge %s\n", string);
-            case GTE -> String.format("if_icmplt %s\n", string);
-            default -> "Error in RelationalOperations\n";
-        };
+        switch (opt) {
+            case LTH:
+                return String.format("if_icmpge %s\n", string);
+            case GTE:
+                return String.format("if_icmplt %s\n", string);
+            default:
+                return "Error in RelationalOperations\n";
+        }
     }
 
     private String getTrueLabel() {
@@ -498,16 +473,5 @@ public class JasminGenerator {
 
     private String getEndIfLabel() {
         return "myEndIf" + this.conditional;
-    }
-
-    private void decrementStackCounter(int i) {
-        this.counterStack -= i;
-    }
-
-    private void incrementStackCounter(int i) {
-        this.counterStack += i;
-        if (this.counterStack > this.counterMax) {
-            this.counterMax = counterStack;
-        }
     }
 }
