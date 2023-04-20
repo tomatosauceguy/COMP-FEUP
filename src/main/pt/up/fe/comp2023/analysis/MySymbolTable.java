@@ -16,6 +16,17 @@ public class MySymbolTable implements SymbolTable {
     private List<MySymbolTableMethod> methods = new ArrayList<>();
     private MySymbolTableMethod currentMethod;
 
+    private String currentMethodName = "";
+
+    public void setCurrentMethodName(String currentMethodName) {
+        this.currentMethodName = currentMethodName;
+    }
+
+    public String getCurrentMethodName() {
+        return currentMethodName;
+    }
+
+
     public void setClassName(String className) {
         this.className = className;
     }
@@ -144,4 +155,5 @@ public class MySymbolTable implements SymbolTable {
     public List<Symbol> getLocalVariables(String methodName) {
         return null;
     }
+
 }
