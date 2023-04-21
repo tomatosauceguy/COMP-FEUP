@@ -226,7 +226,6 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
 
     private Map.Entry<String, String> dealWithClassDeclaration(JmmNode node, Boolean data) {
         scope = "CLASS";
-        //List<JmmNode> children = node.getChildren();
 
         for (JmmNode child : node.getChildren()) {
             visit(child, false);
@@ -249,7 +248,6 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
                 variable = table.getField(node.get("variable"));
             }
 
-            // IF assignment is related to an access to an imported static method
             if (assignment.getKey().equals("access")) {
                 variable.setValue(true);
                 return null;
@@ -257,7 +255,6 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
 
             String[] parts = assignment.getKey().split(" ");
 
-            // Matching Types
             if (variable.getKey().getType().getName().equals(parts[0])) {
                 if (!(parts.length == 2 && variable.getKey().getType().isArray()) && !(parts.length == 1 && !variable.getKey().getType().isArray())) {
                     reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), Integer.parseInt(node.get("colStart")), "Mismatched types: " + variable.getKey().getType().getName() + " and " + assignment.getKey()));
@@ -370,16 +367,10 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
             return Map.entry("error", "null");
         }
 
-        return Map.entry("int", leftReturn.getValue());
+        return Map.entry("index", leftReturn.getValue());
     }
     private Map.Entry<String, String> dealWithArrayAssign(JmmNode node, Boolean data){
-
-        return null;
-    }
-
-
-    private Map.Entry<String, String> dealWithArrayAssignmennt(JmmNode node, Boolean data) {
-        //TODO esta bue bom
+        //TODO este visitor
         return null;
     }
 
@@ -467,25 +458,13 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
     }
 
     private Map.Entry<String, String> dealWithReturn(JmmNode node, Boolean space) {
-        System.out.println("before visit");
-        System.out.println("kind: " + node.getKind());
         String returnType = visit(node, true).getKey();
-
-        System.out.println("visit node: " + visit(node, true));
 
         if (returnType.equals("access")) {
             return null;
         }
 
         String[] parts = returnType.split(" ");
-
-        System.out.println("part: " + parts.length);
-        System.out.println("return type name: " + currentMethod.getReturnType().getName());
-        System.out.println("return type:: " + returnType);
-
-        if (!parts[0].equals(currentMethod.getReturnType().getName())) {
-            System.out.println("entrou");
-        }
 
         if (parts.length == 2 && currentMethod.getReturnType().isArray()) {
             if (!parts[0].equals(currentMethod.getReturnType().getName())) {
@@ -494,7 +473,6 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
             return null;
         } else if (parts.length == 1 && !currentMethod.getReturnType().isArray()) {
             if (!parts[0].equals(currentMethod.getReturnType().getName())) {
-                System.out.println("nao devia entrar aqui");
                 reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), Integer.parseInt(node.get("colStart")), "Return type mismatch 2"));
             }
             return null;
@@ -517,7 +495,6 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
         List<JmmNode> children = node.getChildren();
         List<Type> params = getParametersList(children);
 
-        System.out.println("param list: " + params);
         String method = node.get("value");
         if (params.size() > 0) {
             for (Type param : params) {
@@ -567,12 +544,10 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
     private Map.Entry<String, String> dealWithAccessExpression(JmmNode node, Boolean requested) {
         JmmNode target = node.getChildren().get(0);
         Map.Entry<String, String> targetReturn = visit(target, true);
-        System.out.println("target return: " + targetReturn);
 
         if(node.getChildren().size()>1) {
             JmmNode method = node.getChildren().get(1);
             Map.Entry<String, String> methodReturn = visit(method, true);
-            System.out.println("method return: " + methodReturn);
             if (targetReturn.getKey().equals("error")) {
                 if (requested != null || !node.getJmmParent().getKind().equals("Assignment"))
                     reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), Integer.parseInt(node.get("colStart")), "Invalid Access"));
