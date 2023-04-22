@@ -57,7 +57,7 @@ statement
 
 expression
     : '(' expression ')'  #ParenOp
-    | expression '[' expression ']' #ArrayAcessOp
+    | expression '[' expression ']' #ArrayAccessOp
     | expression '.' 'length'  #ArrayLengthOp
     | expression '.' name = ID '(' ( expression ( ',' expression )* )? ')'  #MethodCallOp
     | '!' expression  #NotExpression
