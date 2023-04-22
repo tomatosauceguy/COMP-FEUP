@@ -369,10 +369,35 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
 
         return Map.entry("index", leftReturn.getValue());
     }
-    private Map.Entry<String, String> dealWithArrayAssign(JmmNode node, Boolean data){
-        //TODO este visitor
-        return null;
+
+    private Map.Entry<String, String> dealWithArrayAssign(JmmNode node, Boolean data) {
+        JmmNode arrayNode = node.getChildren().get(0);
+        JmmNode indexNode = node.getChildren().get(1);
+        JmmNode valueNode = node.getChildren().get(2);
+
+        Map.Entry<String, String> arrayReturn = visit(arrayNode, true);
+        Map.Entry<String, String> indexReturn = visit(indexNode, true);
+        Map.Entry<String, String> valueReturn = visit(valueNode, true);
+
+        if (!arrayReturn.getKey().endsWith("[]")) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(arrayNode.get("lineStart")), Integer.parseInt(arrayNode.get("colStart")), "Array assignment to non-array type: " + arrayNode));
+            return Map.entry("error", "null");
+        }
+
+        String arrayType = arrayReturn.getKey().substring(0, arrayReturn.getKey().length() - 2);
+        if (!valueReturn.getKey().equals(arrayType)) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(valueNode.get("lineStart")), Integer.parseInt(valueNode.get("colStart")), "Array assignment with mismatched types: " + valueNode));
+            return Map.entry("error", "null");
+        }
+
+        if (!indexReturn.getKey().equals("int")) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(indexNode.get("lineStart")), Integer.parseInt(indexNode.get("colStart")), "Array index must be of type int: " + indexNode));
+            return Map.entry("error", "null");
+        }
+
+        return Map.entry("value", valueReturn.getValue());
     }
+
 
     private Map.Entry<String, String> dealWithVariable(JmmNode node, Boolean data) {
         Map.Entry<Symbol, Boolean> field = null;
