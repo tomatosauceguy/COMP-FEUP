@@ -49,7 +49,7 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
 
         addVisit("ArrayAssignmentStat", this::dealWithArrayAssign);
         addVisit("NewIntArrayOp", this::dealWithArrayInit);
-        addVisit("ArrayAcessOp", this::dealWithArrayAccess);
+        addVisit("ArrayAccessOp", this::dealWithArrayAccess);
 
         addVisit("IdOp", this::dealWithVariable);
         //addVisit("VarDeclaration", this::dealWithVariableDeclaration);
@@ -109,11 +109,11 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
                 reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(right.get("lineStart")), Integer.parseInt(right.get("colStart")), "Right Member not initialized: " + right));
             }
         }
-
+        //TODO isto esta mal
         if (!leftReturn.getKey().equals("int") && !leftReturn.getKey().equals("access")) {
             dataReturn = Map.entry("error", "null");
             if (data != null) {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(left.get("lineStart")), Integer.parseInt(left.get("colStart")), "Left Member not integer: " + left));
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(left.get("lineStart")), Integer.parseInt(left.get("colStart")), "1 Left Member not integer: " + left));
             }
         }
         if (!rightReturn.getKey().equals("int") && !rightReturn.getKey().equals("access")) {
@@ -155,7 +155,7 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
         if (!leftReturn.getKey().equals("int")) {
             dataReturn = Map.entry("error", "null");
             if (data != null) {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(left.get("lineStart")), Integer.parseInt(left.get("colStart")), "Left Member not integer: " + left));
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(left.get("lineStart")), Integer.parseInt(left.get("colStart")), "2 Left Member not integer: " + left));
             }
         }
         if (!rightReturn.getKey().equals("int")) {
@@ -349,7 +349,7 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
 
         return Map.entry("int []", "null");
     }
-
+/*
     private Map.Entry<String, String> dealWithArrayAccess(JmmNode node, Boolean data) {
         JmmNode leftIndex = node.getChildren().get(0);
         JmmNode rigthIndex = node.getChildren().get(1);
@@ -369,6 +369,27 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
 
         return Map.entry("index", leftReturn.getValue());
     }
+*/
+    private Map.Entry<String, String> dealWithArrayAccess(JmmNode node, Boolean data) {
+        JmmNode array = node.getChildren().get(0);
+        Map.Entry<String, String> arrayReturn = visit(array, true);
+
+        JmmNode index = node.getChildren().get(1);
+        Map.Entry<String, String> indexReturn = visit(index, true);
+
+        if (!arrayReturn.getKey().endsWith("[]")) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(array.get("lineStart")), Integer.parseInt(array.get("colStart")), "Array access target is not an array: " + array));
+            return Map.entry("error", "null");
+        }
+
+        if (!indexReturn.getKey().equals("int")) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(index.get("lineStart")), Integer.parseInt(index.get("colStart")), "Array index is not an Integer: " + index));
+            return Map.entry("error", "null");
+        }
+
+        return Map.entry(arrayReturn.getKey().substring(0, arrayReturn.getKey().length() - 2), "null");
+    }
+
 
     private Map.Entry<String, String> dealWithArrayAssign(JmmNode node, Boolean data) {
         JmmNode arrayNode = node.getChildren().get(0);
@@ -397,7 +418,6 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
 
         return Map.entry("value", valueReturn.getValue());
     }
-
 
     private Map.Entry<String, String> dealWithVariable(JmmNode node, Boolean data) {
         Map.Entry<Symbol, Boolean> field = null;
