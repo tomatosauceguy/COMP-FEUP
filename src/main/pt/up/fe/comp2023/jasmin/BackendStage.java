@@ -18,17 +18,13 @@ public class BackendStage implements JasminBackend {
         ClassUnit ollirClass = ollirResult.getOllirClass();
         try{
             ollirClass.checkMethodLabels();
-            ollirClass.buildCFGs();
-            ollirClass.outputCFGs();
-            ollirClass.buildVarTables();
-            ollirClass.show();
 
             String JasminCode = new JasminGenerator(ollirClass).dealWithClass();
 
             List<Report> reports = new ArrayList<>();
             return new JasminResult(ollirResult, JasminCode, reports);
         } catch (OllirErrorException f){
-            return new JasminResult(ollirClass.getClassName(), null, Arrays.asList(Report.newError(Stage.GENERATION, -1, -1,
+            return new JasminResult(ollirClass.getClassName(), null, List.of(Report.newError(Stage.GENERATION, -1, -1,
                     "Expection during Jasmin Generator", f)));
         }
     }
