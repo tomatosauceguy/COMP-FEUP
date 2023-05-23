@@ -30,9 +30,9 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
 
     protected void buildVisitor() {
 
-        addVisit("BinaryOperator", this::dealWithBinaryOperation);
-        addVisit("RelationalExpression", this::dealWithRelationalExpression);
-        addVisit("AndExpression", this::dealWithAndExpression);
+
+
+
         addVisit("IntLiteral", this::dealWithPrimitive);
         addVisit("BooleanLiteral", this::dealWithPrimitive);
 
@@ -48,7 +48,7 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
 
 
         addVisit("ArrayAssignmentStat", this::dealWithArrayAssign);
-        addVisit("NewIntArrayOp", this::dealWithArrayInit);
+
         addVisit("ArrayAccessOp", this::dealWithArrayAccess);
 
         addVisit("IdOp", this::dealWithVariable);
@@ -59,9 +59,15 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
 
         //addVisit("MethodCallOp", this::dealWithMethodCall);
         addVisit("Length", this::dealWithMethodCall);
-        addVisit("NewObjectOp", this::dealWithNewObject);
+
         addVisit("MethodCallOp", this::dealWithAccessExpression);
         addVisit("ExpressionStat", this::dealWtihExpressionStat);
+
+        addVisit("BinaryOperator", this::dealWithBinaryOperation);
+        addVisit("RelationalExpression", this::dealWithRelationalExpression);
+        addVisit("AndExpression", this::dealWithAndExpression);
+        addVisit("NewIntArrayOp", this::dealWithArrayInit);
+        addVisit("NewObjectOp", this::dealWithNewObject);
 
         setDefaultVisit(this::dealWithDefaultVisit);
     }
@@ -235,6 +241,13 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
 
     private Map.Entry<String, String> dealWithAssignment(JmmNode node, Boolean space) {
         List<JmmNode> children = node.getChildren();
+        System.out.println("assign");
+
+        JmmNode parent = node.getJmmParent();
+        while (parent != null && !parent.getKind().equals("MethodDeclaration") && !parent.getKind().equals("MainMethod")){
+            System.out.println(parent.getKind());
+            parent = parent.getJmmParent();
+        }
 
         if (children.size() == 1) {
             Map.Entry<String, String> assignment = visit(node.getJmmChild(0), true);
@@ -246,6 +259,11 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
             Map.Entry<Symbol, Boolean> variable;
             if ((variable = currentMethod.getField(node.get("variable"))) == null) {
                 variable = table.getField(node.get("variable"));
+                System.out.println("main error");
+                if(parent.getKind().equals("MainMethod") && variable != null){
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), Integer.parseInt(node.get("colStart")), "Fields cant be used in main method " + node.getChildren().get(0)));
+                    return null;
+                }
             }
 
             if (assignment.getKey().equals("access")) {
@@ -349,27 +367,7 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
 
         return Map.entry("int []", "null");
     }
-/*
-    private Map.Entry<String, String> dealWithArrayAccess(JmmNode node, Boolean data) {
-        JmmNode leftIndex = node.getChildren().get(0);
-        JmmNode rigthIndex = node.getChildren().get(1);
 
-        Map.Entry<String, String> leftReturn = visit(leftIndex, true);
-        Map.Entry<String, String> rigthReturn = visit(rigthIndex, true);
-
-        if (!leftReturn.getKey().equals("int")) {
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(leftIndex.get("lineStart")), Integer.parseInt(leftIndex.get("colStart")), "Array access index is not an Integer: " + leftIndex));
-            return Map.entry("error", "null");
-        }
-
-        if (!rigthReturn.getKey().equals("int")) {
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(leftIndex.get("lineStart")), Integer.parseInt(leftIndex.get("colStart")), "Index must be of type int: " + leftIndex));
-            return Map.entry("error", "null");
-        }
-
-        return Map.entry("index", leftReturn.getValue());
-    }
-*/
     private Map.Entry<String, String> dealWithArrayAccess(JmmNode node, Boolean data) {
         JmmNode array = node.getChildren().get(0);
         Map.Entry<String, String> arrayReturn = visit(array, true);
@@ -454,11 +452,19 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
     private Map.Entry<String, String> dealWithMainDeclaration(JmmNode node, Boolean data) {
         scope = "METHOD";
 
+        List<JmmNode> children = node.getChildren();
+
         try {
             currentMethod = table.getMethod("main", Arrays.asList(new Type("String", true)), new Type("void", false));
         } catch (Exception e) {
             currentMethod = null;
             e.printStackTrace();
+        }
+
+        for(int i = 0 ; i < children.size(); i++){
+            if (statements.contains(children.get(i).getKind())){
+                visit(children.get(i), true);
+            }
         }
 
         return null;
