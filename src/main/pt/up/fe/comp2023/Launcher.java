@@ -49,7 +49,7 @@ public class    Launcher {
 
 
         jmmAnalysisResult.getReports();
-        //System.out.println("getreports: " + jmmAnalysis.getReports());
+        System.out.println("getreports: " + jmmAnalysisResult.getReports());
 
         /*
         if (verifyReports(semanticsResult.getReports())) return;

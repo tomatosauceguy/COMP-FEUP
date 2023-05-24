@@ -29,45 +29,33 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
     }
 
     protected void buildVisitor() {
-
-
-
-
-        addVisit("IntLiteral", this::dealWithPrimitive);
-        addVisit("BooleanLiteral", this::dealWithPrimitive);
-
-        addVisit("ImportDeclaration", this::dealWithImport);
-
-        addVisit("AssignmentStat", this::dealWithAssignment);
-        addVisit("ClassDeclaration", this::dealWithClassDeclaration);
+        //Program
         addVisit("Program", this::dealWithProgram);
+        addVisit("ImportDeclaration", this::dealWithImport);
+        addVisit("ClassDeclaration", this::dealWithClassDeclaration);
+        addVisit("RegularMethod", this::dealWithMethodDeclaration);
+        addVisit("MainMethod", this::dealWithMainDeclaration);
 
-        addVisit("NotExpression", this::dealWithNotExpression);
+        //Statements
         addVisit("IfElseStat", this::dealConditionalExpression);
         addVisit("WhileStat", this::dealConditionalExpression);
-
-
+        addVisit("ExpressionStat", this::dealWtihExpressionStat);
+        addVisit("AssignmentStat", this::dealWithAssignment);
         addVisit("ArrayAssignmentStat", this::dealWithArrayAssign);
 
+        //Expression
         addVisit("ArrayAccessOp", this::dealWithArrayAccess);
-
-        addVisit("IdOp", this::dealWithVariable);
-        //addVisit("VarDeclaration", this::dealWithAssignment);
-
-        addVisit("MainMethod", this::dealWithMainDeclaration);
-        addVisit("RegularMethod", this::dealWithMethodDeclaration);
-
-        //addVisit("MethodCallOp", this::dealWithMethodCall);
-        addVisit("Length", this::dealWithMethodCall);
-
+        addVisit("ArrayLengthOp", this::dealWithMethodCall);
         addVisit("MethodCallOp", this::dealWithAccessExpression);
-        addVisit("ExpressionStat", this::dealWtihExpressionStat);
-
+        addVisit("NotExpression", this::dealWithNotExpression);
         addVisit("BinaryOperator", this::dealWithBinaryOperation);
         addVisit("RelationalExpression", this::dealWithRelationalExpression);
         addVisit("AndExpression", this::dealWithAndExpression);
         addVisit("NewIntArrayOp", this::dealWithArrayInit);
         addVisit("NewObjectOp", this::dealWithNewObject);
+        addVisit("IntLiteral", this::dealWithPrimitive);
+        addVisit("BooleanLiteral", this::dealWithPrimitive);
+        addVisit("IdOp", this::dealWithVariable);
 
         setDefaultVisit(this::dealWithDefaultVisit);
     }
@@ -371,17 +359,20 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
     private Map.Entry<String, String> dealWithArrayAccess(JmmNode node, Boolean data) {
         JmmNode array = node.getChildren().get(0);
         Map.Entry<String, String> arrayReturn = visit(array, true);
+        System.out.println("array::" + arrayReturn.getKey());
 
         JmmNode index = node.getChildren().get(1);
         Map.Entry<String, String> indexReturn = visit(index, true);
 
         if (!arrayReturn.getKey().endsWith("[]")) {
             reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(array.get("lineStart")), Integer.parseInt(array.get("colStart")), "Array access target is not an array: " + array));
+            System.out.println("erro");
             return Map.entry("error", "null");
         }
 
         if (!indexReturn.getKey().equals("int")) {
             reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(index.get("lineStart")), Integer.parseInt(index.get("colStart")), "Array index is not an Integer: " + index));
+            System.out.println("erro");
             return Map.entry("error", "null");
         }
 
@@ -636,7 +627,10 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
 
             } else if (table.getImports().contains(targetReturn.getKey())) {
                 return Map.entry("access", "null");
-            }
+            }/* else if (!table.getImports().contains(targetReturn.getKey()) && table.getSuper() == null) {
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), Integer.parseInt(node.get("colStart")), "Class not imported"));
+            return Map.entry("error", "null");
+        }*/
         else if (!this.table.getMethods().contains(node.get("name"))) {
             if(this.table.getSuper() == null){
                 reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), Integer.parseInt(node.get("colStart")), "Method name doesnt exist"));
