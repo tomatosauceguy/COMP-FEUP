@@ -36,7 +36,7 @@ public class JasminGenerator {
             this.counterMax = 0;
 
             string.append(this.dealWithMethodHeader(method));
-            String instructions = this.dealWithMethodIntructions(method);
+            String instructions = this.dealWithMethodInstructions(method);
             if (!method.isConstructMethod()) {
                 string.append(this.dealWithMethodLimits(method));
                 string.append(instructions);
@@ -89,7 +89,7 @@ public class JasminGenerator {
     }
 
 
-    private String dealWithMethodIntructions(Method method){
+    private String dealWithMethodInstructions(Method method){
         StringBuilder string = new StringBuilder();
         method.getVarTable();
         for (Instruction instruction : method.getInstructions()) {
