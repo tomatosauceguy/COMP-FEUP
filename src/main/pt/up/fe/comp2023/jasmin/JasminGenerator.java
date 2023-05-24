@@ -318,44 +318,14 @@ public class JasminGenerator {
 
                             op = "if_icmplt";
                         }
-                    }
-                    case GTE -> {
-                        Element left = binaryOpInstruction.getLeftOperand();
-                        Element right = binaryOpInstruction.getRightOperand();
 
-                        Integer parsed = null;
-                        Element other = null;
-                        op = "if_icmpgt";
-
-                        if (left instanceof LiteralElement) {
-                            String literal = ((LiteralElement) left).getLiteral();
-                            parsed = Integer.parseInt(literal);
-                            other = right;
-                            op = "ifgt";
-
-                        } else if (right instanceof LiteralElement) {
-                            String literal = ((LiteralElement) right).getLiteral();
-                            parsed = Integer.parseInt(literal);
-                            other = left;
-                            op = "iflt";
-                        }
-
-                        if (parsed != null && parsed == 0) {
-                            string.append(this.getLoadToStack(other, table));
-
-                        } else {
-                            string.append(this.getLoadToStack(left, table))
-                                    .append(this.getLoadToStack(right, table));
-
-                            op = "if_icmpgt";
-                        }
                     }
                     case ANDB -> {
                         string.append(this.dealWithInstruction(cond, table, new HashMap<>()));
                         op = "ifne";
                     }
                     default -> {
-                        string.append("Error invalid binaryOperation\n" + binaryOpInstruction.getOperation().getOpType() + "\n");
+                        string.append("Error invalid binaryOperation\n");
                         string.append(this.dealWithInstruction(cond, table, new HashMap<>()));
                         op = "ifne";
                     }
