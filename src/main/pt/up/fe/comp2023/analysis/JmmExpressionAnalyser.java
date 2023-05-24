@@ -52,7 +52,7 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
         addVisit("ArrayAccessOp", this::dealWithArrayAccess);
 
         addVisit("IdOp", this::dealWithVariable);
-        //addVisit("VarDeclaration", this::dealWithVariableDeclaration);
+        //addVisit("VarDeclaration", this::dealWithAssignment);
 
         addVisit("MainMethod", this::dealWithMainDeclaration);
         addVisit("RegularMethod", this::dealWithMethodDeclaration);
@@ -245,7 +245,7 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
 
         JmmNode parent = node.getJmmParent();
         while (parent != null && !parent.getKind().equals("MethodDeclaration") && !parent.getKind().equals("MainMethod")){
-            System.out.println(parent.getKind());
+            //System.out.println(parent.getKind());
             parent = parent.getJmmParent();
         }
 
@@ -259,8 +259,8 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
             Map.Entry<Symbol, Boolean> variable;
             if ((variable = currentMethod.getField(node.get("variable"))) == null) {
                 variable = table.getField(node.get("variable"));
-                System.out.println("main error");
-                if(parent.getKind().equals("MainMethod") && variable != null){
+                //System.out.println("main error");
+                if(parent != null && parent.getKind().equals("MainMethod") && variable != null){
                     reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), Integer.parseInt(node.get("colStart")), "Fields cant be used in main method " + node.getChildren().get(0)));
                     return null;
                 }
@@ -440,15 +440,7 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
             return Map.entry(field.getKey().getType().getName() + (field.getKey().getType().isArray() ? " []" : ""), field.getValue() ? "true" : "null");
         }
     }
-/*
-    private Map.Entry<String, String> dealWithVariableDeclaration(JmmNode node, Boolean data) {
-        JmmNode left = node.getChildren().get(0);
-        JmmNode right = node.getChildren().get(1);
 
-
-        return null;
-    }
- */
     private Map.Entry<String, String> dealWithMainDeclaration(JmmNode node, Boolean data) {
         scope = "METHOD";
 
@@ -644,10 +636,7 @@ public class JmmExpressionAnalyser extends AJmmVisitor<Boolean, Map.Entry<String
 
             } else if (table.getImports().contains(targetReturn.getKey())) {
                 return Map.entry("access", "null");
-            } else if (!table.getImports().contains(targetReturn.getKey()) && table.getSuper() == null) {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), Integer.parseInt(node.get("colStart")), "Class not imported"));
-            return Map.entry("error", "null");
-        }
+            }
         else if (!this.table.getMethods().contains(node.get("name"))) {
             if(this.table.getSuper() == null){
                 reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), Integer.parseInt(node.get("colStart")), "Method name doesnt exist"));
