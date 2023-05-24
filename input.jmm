@@ -1,11 +1,13 @@
-class T3NoReports {
+class ArrayAccessOnInt {
 
-    int foo(int[] a) {
-        int r;
+    public static void main(String[] args) {
 
-        r = a[0] + 1;
-        r = 2 + a[1] + 10 + a[2];
+    }
 
-        return r;
+    public int foo() {
+        int[] a;
+
+
+        return a[1+2];
     }
 }
