@@ -9,6 +9,7 @@ import pt.up.fe.comp.TestUtils;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
 import pt.up.fe.comp2023.analysis.JmmAnalyser;
+import pt.up.fe.comp2023.jasmin.BackendStage;
 import pt.up.fe.specs.util.SpecsIo;
 import pt.up.fe.specs.util.SpecsLogs;
 import pt.up.fe.specs.util.SpecsSystem;
@@ -51,11 +52,9 @@ public class    Launcher {
         jmmAnalysisResult.getReports();
         System.out.println("getreports: " + jmmAnalysisResult.getReports());
 
-        /*
-        if (verifyReports(semanticsResult.getReports())) return;
-        printSymbolTable(semanticsResult);
-        */
         System.out.println(parserResult.getRootNode().toTree());
+
+        BackendStage jmmBackendResult = new BackendStage();
 
         // ... add remaining stages
     }

@@ -1,13 +1,22 @@
-class ArrayAccessOnInt {
+import io;
 
-    public static void main(String[] args) {
+class A {
+    int a;
 
+    public int x(){
+        a = 10;    
+        io.print(a);
+        return a;
     }
-
-    public int foo() {
-        int[] a;
-
-
-        return a[1+2];
+ 
+    public static void main(String[] args){
+        A a;
+        int[] b;
+        b = new int[10];
+        b[0] = 10;
+        b[1] = 30;
+        io.println(10*20);
+        a = new A();
+        a.x();
     }
 }

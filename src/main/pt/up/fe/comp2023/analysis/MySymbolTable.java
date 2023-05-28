@@ -63,29 +63,6 @@ public class MySymbolTable implements SymbolTable {
         return type;
     }
 
-/*
-    @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder("SYMBOL TABLE\n");
-        builder.append("Imports").append("\n");
-        for (String importStmt : imports)
-            builder.append("\t").append(importStmt).append("\n");
-
-        builder.append("Class Name: ").append(className).append(" | Extends: ").append(superClassName).append("\n");
-
-        builder.append("--- Local Variables ---").append("\n");
-        for (var field : fields)
-            builder.append("\t").append(field).append(" Initialized: ").append(field).append("\n");
-
-        builder.append("--- Methods ---").append("\n");
-        for (MySymbolTableMethod method : this.methods) {
-            builder.append(method);
-            builder.append("---------").append("\n");
-        }
-
-        return builder.toString();
-    }*/
-
     @Override
     public List<String> getImports() {
         return imports;
